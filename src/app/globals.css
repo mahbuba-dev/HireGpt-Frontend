@@ -1,0 +1,382 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ============================= */
+/* HIREGPT GLOBAL DESIGN SYSTEM  */
+/* ============================= */
+
+/*
+  1. Responsive Container System
+  2. Premium Color System (Orange/Amber/Slate)
+  3. Light/Dark Theme Variables
+  4. Typography Scale
+  5. Premium Utility Classes
+  6. Modern Scrollbar
+  7. Animation Utilities
+  8. Layout Recommendations
+*/
+
+
+/* ============================= */
+/* 1. RESPONSIVE CONTAINER SYSTEM */
+/* ============================= */
+
+.page-container {
+  width: 100%;
+  max-width: clamp(320px, 92vw, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1rem, 4vw, 2.5rem);
+  padding-right: clamp(1rem, 4vw, 2.5rem);
+}
+
+.dashboard-container {
+  width: 100%;
+  max-width: clamp(320px, 98vw, 1440px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.5rem, 2vw, 2rem);
+  padding-right: clamp(0.5rem, 2vw, 2rem);
+}
+
+.content-container {
+  width: 100%;
+  max-width: clamp(320px, 90vw, 900px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.5rem);
+  padding-right: clamp(0.75rem, 3vw, 1.5rem);
+}
+
+.text-container {
+  width: 100%;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-spacing {
+  margin-top: clamp(2.5rem, 8vw, 6rem);
+  margin-bottom: clamp(2.5rem, 8vw, 6rem);
+}
+
+.section-padding {
+  padding-top: clamp(2rem, 6vw, 4rem);
+  padding-bottom: clamp(2rem, 6vw, 4rem);
+}
+
+.hero-padding {
+  padding-top: clamp(3rem, 10vw, 7rem);
+  padding-bottom: clamp(3rem, 10vw, 7rem);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+@media (min-width: 768px) {
+  .section-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1200px) {
+  .section-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+html {
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+body {
+  overflow-x: hidden;
+}
+
+/* ============================= */
+/* 2. PREMIUM COLOR SYSTEM       */
+/* ============================= */
+
+:root {
+  /* Brand Orange/Amber/Slate Palette */
+  --brand-orange: #ff7a1a;
+  --brand-orange-dark: #d65a00;
+  --brand-amber: #ffb547;
+  --brand-amber-dark: #e09b2d;
+  --brand-slate: #18181b;
+  --brand-slate-light: #232329;
+  --brand-glass: rgba(255,255,255,0.08);
+  --brand-glass-dark: rgba(24,24,27,0.7);
+  --brand-border: #e5e7eb;
+  --brand-border-dark: #232329;
+  --brand-bg: #fff;
+  --brand-bg-dark: #18181b;
+  --brand-card: #f8fafc;
+  --brand-card-dark: #232329;
+  --brand-muted: #f3f4f6;
+  --brand-muted-dark: #232329;
+  --brand-text: #18181b;
+  --brand-text-dark: #f8fafc;
+  --brand-muted-text: #6b7280;
+  --brand-muted-text-dark: #a1a1aa;
+  --brand-glow: 0 0 24px 0 #ff7a1a44;
+  --brand-glow-dark: 0 0 32px 0 #ffb54733;
+}
+
+.dark {
+  --brand-bg: var(--brand-bg-dark);
+  --brand-card: var(--brand-card-dark);
+  --brand-muted: var(--brand-muted-dark);
+  --brand-text: var(--brand-text-dark);
+  --brand-muted-text: var(--brand-muted-text-dark);
+  --brand-border: var(--brand-border-dark);
+  --brand-glass: var(--brand-glass-dark);
+  --brand-glow: var(--brand-glow-dark);
+}
+
+/* ============================= */
+/* 3. LIGHT/DARK THEME VARIABLES */
+/* ============================= */
+
+:root {
+  color-scheme: light;
+  background: var(--brand-bg);
+  color: var(--brand-text);
+}
+.dark {
+  color-scheme: dark;
+  background: var(--brand-bg-dark);
+  color: var(--brand-text-dark);
+}
+
+/* ============================= */
+/* 4. TYPOGRAPHY SCALE           */
+/* ============================= */
+
+:root {
+  --font-sans: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'Geist Mono', 'Fira Mono', 'Menlo', monospace;
+  --font-heading: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  --heading-1: clamp(2.5rem, 6vw, 3.5rem);
+  --heading-2: clamp(2rem, 4vw, 2.5rem);
+  --heading-3: clamp(1.5rem, 3vw, 2rem);
+  --heading-4: clamp(1.25rem, 2vw, 1.5rem);
+  --text-base: clamp(1rem, 1.5vw, 1.125rem);
+  --text-muted: var(--brand-muted-text);
+  --text-muted-dark: var(--brand-muted-text-dark);
+  --line-height-tight: 1.15;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.7;
+}
+
+h1, .h1 {
+  font-family: var(--font-heading);
+  font-size: var(--heading-1);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+}
+h2, .h2 {
+  font-family: var(--font-heading);
+  font-size: var(--heading-2);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+}
+h3, .h3 {
+  font-family: var(--font-heading);
+  font-size: var(--heading-3);
+  font-weight: 600;
+  line-height: var(--line-height-normal);
+}
+h4, .h4 {
+  font-family: var(--font-heading);
+  font-size: var(--heading-4);
+  font-weight: 500;
+  line-height: var(--line-height-normal);
+}
+p, .text-base {
+  font-size: var(--text-base);
+  line-height: var(--line-height-loose);
+  color: var(--brand-text);
+}
+.dark p, .dark .text-base {
+  color: var(--brand-text-dark);
+}
+.muted {
+  color: var(--brand-muted-text);
+}
+.dark .muted {
+  color: var(--brand-muted-text-dark);
+}
+
+/* ============================= */
+/* 5. PREMIUM GLOBAL UTILITIES   */
+/* ============================= */
+
+.glass-card {
+  background: var(--brand-glass);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+  box-shadow: 0 2px 24px 0 rgba(24,24,27,0.08);
+  transition: box-shadow 0.2s cubic-bezier(.22,1,.36,1), border 0.2s;
+}
+.dark .glass-card {
+  background: var(--brand-glass-dark);
+  border: 1px solid var(--brand-border-dark);
+  box-shadow: 0 2px 32px 0 rgba(255,186,90,0.08);
+}
+
+.premium-card {
+  background: var(--brand-card);
+  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+  box-shadow: 0 2px 24px 0 rgba(255,122,26,0.06);
+  transition: box-shadow 0.2s cubic-bezier(.22,1,.36,1), border 0.2s;
+}
+.dark .premium-card {
+  background: var(--brand-card-dark);
+  border: 1px solid var(--brand-border-dark);
+  box-shadow: 0 2px 32px 0 rgba(255,186,90,0.08);
+}
+
+.orange-glow {
+  box-shadow: var(--brand-glow);
+}
+.dark .orange-glow {
+  box-shadow: var(--brand-glow-dark);
+}
+
+.hero-gradient {
+  background: linear-gradient(90deg, #ffb547 0%, #ff7a1a 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-border {
+  border: 2px solid transparent;
+  border-radius: 1.25rem;
+  background: linear-gradient(var(--brand-bg), var(--brand-bg)) padding-box,
+    linear-gradient(90deg, #ffb547, #ff7a1a) border-box;
+}
+
+.grid-pattern {
+  background-image: repeating-linear-gradient(90deg,rgba(255,186,90,0.04) 0 2px,transparent 2px 40px),
+    repeating-linear-gradient(180deg,rgba(255,186,90,0.04) 0 2px,transparent 2px 40px);
+}
+
+.noise-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url('/noise.png');
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+}
+
+.hover-elevate {
+  transition: box-shadow 0.18s cubic-bezier(.22,1,.36,1), transform 0.18s;
+}
+.hover-elevate:hover {
+  box-shadow: 0 4px 32px 0 #ff7a1a22, 0 1.5px 8px 0 #18181b11;
+  transform: translateY(-2px) scale(1.01);
+}
+
+.ai-glow {
+  box-shadow: 0 0 24px 0 #ffb54755, 0 0 64px 0 #ff7a1a22;
+  filter: drop-shadow(0 0 8px #ffb54788);
+}
+
+/* ============================= */
+/* 6. PREMIUM SCROLLBAR SYSTEM   */
+/* ============================= */
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffb547 0%, #ff7a1a 100%);
+  border-radius: 8px;
+  box-shadow: 0 0 8px #ffb54744;
+  transition: background 0.2s;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff7a1a 0%, #ffb547 100%);
+  box-shadow: 0 0 16px #ffb54788;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffb547 0%, #ff7a1a 100%);
+  box-shadow: 0 0 12px #ffb54755;
+}
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff7a1a 0%, #ffb547 100%);
+  box-shadow: 0 0 20px #ffb54799;
+}
+
+/* ============================= */
+/* 7. ANIMATION UTILITIES        */
+/* ============================= */
+
+@keyframes orange-gradient-motion {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animated-gradient {
+  background: linear-gradient(90deg, #ffb547 0%, #ff7a1a 100%);
+  background-size: 200% 200%;
+  animation: orange-gradient-motion 18s ease-in-out infinite;
+}
+
+@keyframes ai-glow-pulse {
+  0%, 100% { box-shadow: 0 0 24px 0 #ffb54755; }
+  50% { box-shadow: 0 0 48px 0 #ff7a1a88; }
+}
+.ai-glow-animate {
+  animation: ai-glow-pulse 2.8s ease-in-out infinite;
+}
+
+/* ============================= */
+/* 8. LAYOUT RECOMMENDATIONS     */
+/* ============================= */
+
+/*
+  - Use .page-container for all main pages
+  - Use .dashboard-container for dashboard layouts
+  - Use .content-container for forms, modals, and focused content
+  - Use .section-spacing and .section-padding for vertical rhythm
+  - Use .glass-card and .premium-card for cards and surfaces
+  - Use .orange-glow, .ai-glow for highlights and AI features
+  - Use .gradient-border for premium outlines
+  - Use .hero-gradient for hero/brand text
+  - Use .grid-pattern and .noise-overlay for subtle backgrounds
+  - Use .hover-elevate for interactive elevation
+*/
+
+/* Example usage:
+<div class="page-container section-spacing">
+  <h1 class="hero-gradient">Welcome to HireGPT</h1>
+  <div class="glass-card hover-elevate">
+    ...
+  </div>
+</div>
+*/
+
+
+
+/* ============================= */
+/* LEGACY/EXISTING ANIMATIONS    */
+/* ============================= */
+/* (Preserved for compatibility) */
+/* Place only legacy animation keyframes and classes here if needed */
