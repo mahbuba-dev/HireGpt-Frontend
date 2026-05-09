@@ -30,100 +30,85 @@ import DataTableSearch, {
   type SearchSuggestion,
 } from "../shared/Table/DataTableSearch";
 
-type RangeField = "experience" | "price";
-  const displayedRecruiters = useMemo(() => {
-    const minExperience = parseOptionalNumber(
-      currentSearchParams.get("experience[gte]")
-    );
-    const maxExperience = parseOptionalNumber(
-      currentSearchParams.get("experience[lte]")
-    );
-    const minPrice = parseOptionalNumber(currentSearchParams.get("price[gte]"));
-    const maxPrice = parseOptionalNumber(currentSearchParams.get("price[lte]"));
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const [sortBy, sortOrder] = activeSortValue.split(":") as [string, "asc" | "desc"];
 
-    return [...recruiters]
-      .filter((recruiter) => {
-        if (normalizedSearch) {
-          const searchableText = [
-            recruiter.fullName,
-            recruiter.title,
-            recruiter.bio,
-            recruiter.jobCategory?.name,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-          if (!searchableText.includes(normalizedSearch)) {
-            return false;
-          }
-        }
-        if (
-          selectedJobCategoryId !== "all" &&
-          recruiter.jobCategoryId !== selectedJobCategoryId &&
-          recruiter.jobCategory?.id !== selectedJobCategoryId
-        ) {
-          return false;
-        }
-        if (
-          selectedVerification !== "all" &&
-          Boolean(recruiter.isVerified) !== (selectedVerification === "true")
-        ) {
-          return false;
-        }
-        const recruiterExperience = Number(recruiter.experience ?? 0);
-        const recruiterPrice = Number(recruiter.price ?? recruiter.consultationFee ?? 0);
-        if (
-          typeof minExperience === "number" &&
-          recruiterExperience < minExperience
-        ) {
-          return false;
-        }
-        if (
-          typeof maxExperience === "number" &&
-          recruiterExperience > maxExperience
-        ) {
-          return false;
-        }
-        if (typeof minPrice === "number" && recruiterPrice < minPrice) {
-          return false;
-        }
-        if (typeof maxPrice === "number" && recruiterPrice > maxPrice) {
-          return false;
-        }
-        return true;
-      })
-      .sort((leftRecruiter, rightRecruiter) => {
-        if (sortBy === "createdAt") {
-          const seededDelta = Number(leftRecruiter.isSeeded) - Number(rightRecruiter.isSeeded);
-          if (seededDelta !== 0) {
-            return seededDelta;
-          }
-        }
-        let comparison = 0;
-        switch (sortBy) {
-          case "experience":
-            comparison = Number(leftRecruiter.experience ?? 0) - Number(rightRecruiter.experience ?? 0);
-            break;
-          case "price":
-            comparison = Number(leftRecruiter.price ?? leftRecruiter.consultationFee ?? 0) - Number(rightRecruiter.price ?? rightRecruiter.consultationFee ?? 0);
-            break;
-          case "fullName":
-            comparison = leftRecruiter.fullName.localeCompare(rightRecruiter.fullName);
-            break;
-          default:
-            comparison = getSortableTimestamp(leftRecruiter) - getSortableTimestamp(rightRecruiter);
-        }
-        return sortOrder === "asc" ? comparison : -comparison;
-      });
-  }, [activeSortValue, currentSearchParams, recruiters, searchTerm, selectedJobCategoryId, selectedVerification]);
-    .map((title) => ({
-      id: `ai-title-${title.toLowerCase().replace(/\s+/g, "-")}`,
-      label: title,
-      value: title,
+// --- Helpers and constants ---
+type RangeField = "experience" | "price";
+type RangePreset = { label: string; gte?: string; lte?: string };
+
+function parseOptionalNumber(val: string | null): number | undefined {
+  if (val == null) return undefined;
+  const n = Number(val);
+  return isNaN(n) ? undefined : n;
+}
+
+function getSortableTimestamp(r: IRecruiter): number {
+  return r.createdAt ? new Date(r.createdAt).getTime() : 0;
+}
+
+const sortOptions = [
+  { value: "createdAt:desc", label: "Newest" },
+  { value: "createdAt:asc", label: "Oldest" },
+  { value: "experience:desc", label: "Most experience" },
+  { value: "experience:asc", label: "Least experience" },
+  { value: "price:asc", label: "Lowest price" },
+  { value: "price:desc", label: "Highest price" },
+  { value: "fullName:asc", label: "Name (A-Z)" },
+  { value: "fullName:desc", label: "Name (Z-A)" },
+];
+
+const experiencePresets: RangePreset[] = [
+  { label: "Any" },
+  { label: "0-2 yrs", gte: "0", lte: "2" },
+  { label: "3-5 yrs", gte: "3", lte: "5" },
+  { label: "6-10 yrs", gte: "6", lte: "10" },
+  { label: "10+ yrs", gte: "10" },
+];
+
+const pricePresets: RangePreset[] = [
+  { label: "Any" },
+  { label: "$0-50", gte: "0", lte: "50" },
+  { label: "$51-100", gte: "51", lte: "100" },
+  { label: "$101-200", gte: "101", lte: "200" },
+  { label: "$200+", gte: "200" },
+];
+
+function getQuickFilterButtonClass(active: boolean) {
+  return (
+    "rounded-xl px-3 py-1 text-xs font-medium transition-all " +
+    (active
+      ? "bg-blue-600 text-white shadow-md dark:bg-blue-400 dark:text-slate-900"
+      : "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:hover:bg-blue-500/30")
+  );
+}
+
+function buildAISuggestions(
+  liveSearchValue: string,
+  recruiters: IRecruiter[],
+  jobCategories: IJobCategory[],
+): SearchSuggestion[] {
+  const trimmed = liveSearchValue.trim().toLowerCase();
+  if (!trimmed) return [];
+
+  const byName = recruiters
+    .filter((r) => r.fullName && r.fullName.toLowerCase().includes(trimmed))
+    .slice(0, 2)
+    .map((r) => ({
+      id: `ai-name-${r.id}`,
+      label: r.fullName,
+      value: r.fullName,
+      kind: "name" as const,
+      helperText: "AI suggestion based on recruiter name",
+    }));
+
+  const byTitle = recruiters
+    .filter((r) => r.title && r.title.toLowerCase().includes(trimmed))
+    .slice(0, 2)
+    .map((r) => ({
+      id: `ai-title-${r.id}`,
+      label: r.title!,
+      value: r.title!,
       kind: "title" as const,
-      helperText: "AI suggestion based on recurring recruiter titles",
+      helperText: "AI suggestion based on recruiter title",
     }));
 
   const byJobCategory = jobCategories
@@ -135,15 +120,17 @@ type RangeField = "experience" | "price";
       id: `ai-jobCategory-${jobCategory.id}`,
       label: jobCategory.name,
       value: jobCategory.name,
-      kind: "jobCategory" as const,
+      kind: "title" as const, // fallback to allowed kind
       helperText: "AI suggestion to explore this job category",
     }));
 
-  // Ensure kind matches SearchSuggestionKind type
-  return [...byName, ...byTitle, ...byJobCategory.map((s) => ({ ...s, kind: "title" as const }))].slice(0, 6);
-};
+
+  return [...byName, ...byTitle, ...byJobCategory].slice(0, 6);
+}
 
 export default function ExpertsPageClient() {
+
+
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [queryString, setQueryString] = useState(() => searchParams.toString());
@@ -217,6 +204,7 @@ export default function ExpertsPageClient() {
 
   // Accept both Recruiter and IRecruiter for now
   // Normalize recruiter data to IRecruiter shape for UI compatibility
+
   const recruiters: IRecruiter[] = useMemo(() => {
     if (!Array.isArray(recruiterData?.data)) return [];
     return recruiterData.data.map((r: any) => ({
@@ -244,6 +232,9 @@ export default function ExpertsPageClient() {
   const meta = recruiterData?.meta;
   const selectedJobCategoryId = currentSearchParams.get("jobCategoryId") ?? "all";
   const selectedVerification = currentSearchParams.get("isVerified") ?? "all";
+
+  // Recruiter filtering and sorting logic (must come after all dependencies)
+
 
   useEffect(() => {
     setLiveSearchValue(searchTerm);
@@ -298,106 +289,68 @@ export default function ExpertsPageClient() {
       }
     };
   }, [liveSearchValue]);
+  // --- Use displayedRecruiters for all recruiter filtering and rendering ---
+  const displayedRecruiters = useMemo(() => {
+    let filtered = recruiters;
 
-  const displayedExperts = useMemo(() => {
-    const minExperience = parseOptionalNumber(
-      currentSearchParams.get("experience[gte]"),
-    );
-    const maxExperience = parseOptionalNumber(
-      currentSearchParams.get("experience[lte]"),
-    );
-    const minPrice = parseOptionalNumber(currentSearchParams.get("price[gte]"));
-    const maxPrice = parseOptionalNumber(currentSearchParams.get("price[lte]"));
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const [sortBy, sortOrder] = activeSortValue.split(":") as [
-      string,
-      "asc" | "desc",
-    ];
+    // Filter by job category
+    if (selectedJobCategoryId !== "all") {
+      filtered = filtered.filter(r => r.jobCategoryId === selectedJobCategoryId);
+    }
 
-    return [...recruiters]
-      .filter((recruiter) => {
-        if (normalizedSearch) {
-          const searchableText = [
-            recruiter.fullName,
-            recruiter.title,
-            recruiter.bio,
-            recruiter.jobCategory?.name,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-          if (!searchableText.includes(normalizedSearch)) {
-            return false;
-          }
-        }
-        if (
-          selectedJobCategoryId !== "all" &&
-          recruiter.jobCategoryId !== selectedJobCategoryId &&
-          recruiter.jobCategory?.id !== selectedJobCategoryId
-        ) {
-          return false;
-        }
-        if (
-          selectedVerification !== "all" &&
-          Boolean(recruiter.isVerified) !== (selectedVerification === "true")
-        ) {
-          return false;
-        }
-        const recruiterExperience = Number(recruiter.experience ?? 0);
-        const recruiterPrice = Number(recruiter.price ?? recruiter.consultationFee ?? 0);
-        if (
-          typeof minExperience === "number" &&
-          recruiterExperience < minExperience
-        ) {
-          return false;
-        }
-        if (
-          typeof maxExperience === "number" &&
-          recruiterExperience > maxExperience
-        ) {
-          return false;
-        }
-        if (typeof minPrice === "number" && recruiterPrice < minPrice) {
-          return false;
-        }
-        if (typeof maxPrice === "number" && recruiterPrice > maxPrice) {
-          return false;
-        }
-        return true;
-      })
-      .sort((leftRecruiter, rightRecruiter) => {
-        if (sortBy === "createdAt") {
-          const seededDelta = Number(leftRecruiter.isSeeded) - Number(rightRecruiter.isSeeded);
-          if (seededDelta !== 0) {
-            return seededDelta;
-          }
-        }
-        let comparison = 0;
-        switch (sortBy) {
-          case "experience":
-            comparison = Number(leftRecruiter.experience ?? 0) - Number(rightRecruiter.experience ?? 0);
-            break;
-          case "price":
-            comparison = Number(leftRecruiter.price ?? leftRecruiter.consultationFee ?? 0) - Number(rightRecruiter.price ?? rightRecruiter.consultationFee ?? 0);
-            break;
-          case "fullName":
-            comparison = leftRecruiter.fullName.localeCompare(rightRecruiter.fullName);
-            break;
-          default:
-            comparison = getSortableTimestamp(leftRecruiter) - getSortableTimestamp(rightRecruiter);
-        }
-        return sortOrder === "asc" ? comparison : -comparison;
-      });
+    // Filter by verification
+    if (selectedVerification !== "all") {
+      filtered = filtered.filter(r => String(r.isVerified) === selectedVerification);
+    }
+
+    // Filter by search term
+    if (searchTerm.trim().length > 0) {
+      const term = searchTerm.trim().toLowerCase();
+      filtered = filtered.filter(r =>
+        r.fullName.toLowerCase().includes(term) ||
+        (r.title && r.title.toLowerCase().includes(term)) ||
+        (r.bio && r.bio.toLowerCase().includes(term))
+      );
+    }
+
+    // Sorting
+    switch (activeSortValue) {
+      case "experience:desc":
+        filtered = [...filtered].sort((a, b) => (b.experience ?? 0) - (a.experience ?? 0));
+        break;
+      case "experience:asc":
+        filtered = [...filtered].sort((a, b) => (a.experience ?? 0) - (b.experience ?? 0));
+        break;
+      case "price:asc":
+        filtered = [...filtered].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        break;
+      case "price:desc":
+        filtered = [...filtered].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+        break;
+      case "fullName:asc":
+        filtered = [...filtered].sort((a, b) => a.fullName.localeCompare(b.fullName));
+        break;
+      case "fullName:desc":
+        filtered = [...filtered].sort((a, b) => b.fullName.localeCompare(a.fullName));
+        break;
+      case "createdAt:asc":
+        filtered = [...filtered].sort((a, b) => getSortableTimestamp(a) - getSortableTimestamp(b));
+        break;
+      case "createdAt:desc":
+      default:
+        filtered = [...filtered].sort((a, b) => getSortableTimestamp(b) - getSortableTimestamp(a));
+        break;
+    }
+
+    return filtered;
   }, [
-    activeSortValue,
-    currentSearchParams,
     recruiters,
-    searchTerm,
     selectedJobCategoryId,
     selectedVerification,
+    searchTerm,
+    activeSortValue,
   ]);
-
-  const totalExperts = displayedExperts.length;
+  const totalRecruiters = displayedRecruiters.length;
   const updateUrlParams = useCallback(
     (
       updater: (params: URLSearchParams) => void,
@@ -553,9 +506,9 @@ export default function ExpertsPageClient() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [displayedExperts.length, queryString]);
+  }, [displayedRecruiters.length, queryString]);
 
-  const totalPages = Math.max(1, Math.ceil(displayedExperts.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(displayedRecruiters.length / PAGE_SIZE));
 
   const visibleRecruiters = useMemo(
     () => displayedRecruiters.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
@@ -572,19 +525,19 @@ export default function ExpertsPageClient() {
 
   useEffect(() => {
     // Prefetch next page card images so transitions feel instant.
-    const nextPageExperts = displayedExperts.slice(
+    const nextPageRecruiters = displayedRecruiters.slice(
       currentPage * PAGE_SIZE,
       (currentPage + 1) * PAGE_SIZE,
     );
 
-    nextPageExperts.forEach((expert) => {
-      const imageSrc = (expert.profilePhoto ?? "").trim();
+    nextPageRecruiters.forEach((recruiter) => {
+      const imageSrc = (recruiter.profilePhoto ?? "").trim();
       if (!imageSrc) return;
 
       const img = new Image();
       img.src = imageSrc;
     });
-  }, [displayedExperts, currentPage, PAGE_SIZE]);
+  }, [displayedRecruiters, currentPage, PAGE_SIZE]);
 
   return (
     <div className="page-container section-spacing">
@@ -783,35 +736,32 @@ export default function ExpertsPageClient() {
             Failed to load experts.
           </CardContent>
         </Card>
-      ) : displayedExperts.length > 0 ? (
+      ) : displayedRecruiters.length > 0 ? (
         <>
           <div className="flex flex-col gap-2 px-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-base muted">
-              {totalExperts} result{totalExperts === 1 ? "" : "s"}
+              {totalRecruiters} result{totalRecruiters === 1 ? "" : "s"}
               {searchTerm ? (
                 <>
                   {" "}for <span className="font-medium text-foreground">“{searchTerm}”</span>
                 </>
               ) : null}
             </p>
-
             <p className="text-base muted">
               {isMobileViewport
-                ? `Showing ${mobileVisibleExperts.length} of ${totalExperts}`
-                : `Showing ${Math.min((currentPage - 1) * PAGE_SIZE + 1, totalExperts)}–${Math.min(
+                ? `Showing ${mobileVisibleRecruiters.length} of ${totalRecruiters}`
+                : `Showing ${Math.min((currentPage - 1) * PAGE_SIZE + 1, totalRecruiters)}–${Math.min(
                     currentPage * PAGE_SIZE,
-                    totalExperts,
-                  )} of ${totalExperts}`}
+                    totalRecruiters,
+                  )} of ${totalRecruiters}`}
             </p>
           </div>
-
           <div className="section-grid md:grid-cols-2 xl:grid-cols-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
             {renderedRecruiters.map((recruiter: IRecruiter) => (
               <RecruiterCard key={recruiter.id} recruiter={recruiter} />
             ))}
           </div>
-
-          {!isMobileViewport && totalPages > 1 ? (
+          {!isMobileViewport && totalPages > 1 && (
             <div className="hidden flex-wrap items-center justify-center gap-1 pt-2 md:flex">
               <Button
                 variant="outline"
@@ -854,27 +804,26 @@ export default function ExpertsPageClient() {
                 Next
               </Button>
             </div>
-          ) : null}
-
-          {isMobileViewport && canLoadMoreOnMobile ? (
+          )}
+          {isMobileViewport && canLoadMoreOnMobile && (
             <div className="pt-2 md:hidden">
               <Button
                 variant="outline"
                 className="w-full rounded-xl"
                 onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
               >
-                Load more experts
+                Load more recruiters
               </Button>
             </div>
-          ) : null}
+          )}
         </>
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="h3 text-foreground">No experts found</p>
+            <p className="h3 text-foreground">No recruiters found</p>
             <p className="text-base muted max-w-md">
               Try adjusting your search, changing the sort, or clearing a few
-              filters to see more experts.
+              filters to see more recruiters.
             </p>
             <Button variant="outline" onClick={clearAllFilters}>
               Reset search and filters
@@ -882,8 +831,6 @@ export default function ExpertsPageClient() {
           </CardContent>
         </Card>
       )}
-
-
     </div>
   );
 }
