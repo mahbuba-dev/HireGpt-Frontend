@@ -73,7 +73,7 @@ export default function PremiumGlassBackground({
         {activeOrbs.map((orb, index) => (
           <span
             key={`${orb.left}-${orb.top}`}
-            className="consultedge-bg-orb absolute rounded-full bg-linear-to-br from-sky-200/40 via-blue-200/24 to-cyan-200/16 dark:from-sky-300/24 dark:via-blue-300/16 dark:to-cyan-300/12"
+            className="hiregpt-bg-orb absolute rounded-full bg-linear-to-br from-sky-200/40 via-blue-200/24 to-cyan-200/16 dark:from-sky-300/24 dark:via-blue-300/16 dark:to-cyan-300/12"
             style={{
               left: orb.left,
               top: orb.top,
@@ -94,7 +94,7 @@ export default function PremiumGlassBackground({
         {activeParticles.map((particle) => (
           <span
             key={`${particle.left}-${particle.top}`}
-            className="consultedge-bg-particle absolute rounded-full bg-slate-100 dark:bg-slate-200"
+            className="hiregpt-bg-particle absolute rounded-full bg-slate-100 dark:bg-slate-200"
             style={{
               left: particle.left,
               top: particle.top,

@@ -93,7 +93,7 @@ const supportHighlights = [
 export default function HomeSection3() {
   return (
     <>
-      <section id="engagement-section" className="relative scroll-mt-28 overflow-hidden space-y-6 rounded-(--ce-shell-radius) border border-border/60 bg-white/50 p-5 shadow-(--ce-shell-shadow-soft) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44">
+      <section id="engagement-section" className="page-container section-spacing glass-card space-y-6">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(124deg,rgba(255,255,255,0.42),rgba(255,255,255,0.08)_44%,rgba(56,189,248,0.08)_100%)] dark:bg-[linear-gradient(124deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_44%,rgba(56,189,248,0.07)_100%)]"
@@ -104,16 +104,16 @@ export default function HomeSection3() {
             <Badge variant="secondary" className="mb-2 bg-amber-100 text-amber-700">
               Get started
             </Badge>
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="h2">
               Flexible ways to engage with ConsultEdge
             </h2>
           </div>
-          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+          <p className="max-w-2xl text-base muted">
             Start by exploring experts, book when you are ready, or contact us for a more tailored team setup.
           </p>
         </div>
 
-        <div className="relative grid gap-5 xl:grid-cols-3">
+        <div className="relative section-grid gap-5 xl:grid-cols-3">
           {engagementOptions.map((option, index) => (
             <Card
               key={option.name}
@@ -169,7 +169,7 @@ export default function HomeSection3() {
 
       <section
         id="faq-section"
-        className="relative my-8 scroll-mt-28 overflow-hidden grid gap-6 rounded-(--ce-shell-radius) border bg-white/48 p-6 shadow-(--ce-shell-shadow-soft) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-8 lg:grid-cols-[0.8fr_1.2fr] dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44"
+        className="page-container section-spacing glass-card grid gap-6 lg:grid-cols-[0.8fr_1.2fr]"
       >
         <div
           aria-hidden
@@ -181,10 +181,10 @@ export default function HomeSection3() {
             <Badge variant="secondary" className="mb-2 bg-sky-100 text-sky-700">
               FAQ
             </Badge>
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="h2">
               Answers that keep things moving
             </h2>
-            <p className="text-muted-foreground">
+            <p className="muted">
               Quick guidance for the most common questions about booking, payments, and expert access.
             </p>
           </div>

@@ -1,17 +1,17 @@
 export type NotificationType =
-  | "bookings"
+  | "applications"
   | "schedule"
   | "system"
   | "user"
-  | "BOOKING"
-  | "BOOKINGS"
+  | "APPLICATION"
+  | "APPLICATIONS"
   | "SCHEDULE"
   | "SYSTEM"
   | "USER"
-  | "EXPERT_APPLICATION"
-  | "EXPERT_APPROVED"
-  | "EXPERT_REJECTED"
-  | "EXPERT_VERIFIED"
+  | "RECRUITER_APPLICATION"
+  | "RECRUITER_APPROVED"
+  | "RECRUITER_REJECTED"
+  | "RECRUITER_VERIFIED"
   | "VERIFICATION_UPDATE";
 
 export interface INotification {
@@ -33,5 +33,5 @@ export interface ICreateNotificationPayload {
   type: string;
   message: string;
   userId?: string;
-  role?: "ADMIN" | "EXPERT" | "CLIENT";
+  role?: "ADMIN" | "RECRUITER" | "CANDIDATE";
 }

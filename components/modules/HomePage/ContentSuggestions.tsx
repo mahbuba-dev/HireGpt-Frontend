@@ -176,7 +176,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
   const showSkeleton = aiLoading && items.length === 0;
 
   return (
-    <section id="insights-section" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-emerald-100/70 bg-white/50 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44">
+    <section id="insights-section" className="page-container section-spacing glass-card">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(126deg,rgba(255,255,255,0.42),rgba(255,255,255,0.08)_44%,rgba(16,185,129,0.09)_100%)] dark:bg-[linear-gradient(126deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_44%,rgba(16,185,129,0.07)_100%)]"
@@ -188,12 +188,12 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
             <Lightbulb className="size-3.5" />
             {personalised ? `Insights tuned to ${industryName}` : "Insights to read next"}
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+          <h2 className="h2">
             {personalised
               ? `Hand-picked reads on ${industryName}`
               : "A short reading list to get sharper, faster"}
           </h2>
-          <p className="text-sm text-muted-foreground md:text-base">
+          <p className="text-base muted">
             {aiResult?.data?.headline
               ? aiResult.data.headline
               : personalised
@@ -214,7 +214,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="section-grid gap-4 xl:grid-cols-4">
         {showSkeleton
           ? Array.from({ length: 4 }).map((_, i) => <ContentSkeleton key={i} />)
           : items.map(({ id, type, title, description, readMinutes, icon: Icon, href }) => (
@@ -246,7 +246,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
             ))}
       </div>
 
-      <div className="mt-5 flex items-center gap-2 rounded-2xl border border-emerald-200/60 bg-white/70 px-4 py-3 text-xs text-emerald-900 dark:border-white/10 dark:bg-slate-900/60 dark:text-emerald-200">
+      <div className="mt-5 flex items-center gap-2 glass-card px-4 py-3 text-xs text-emerald-900 dark:text-emerald-200">
         <Mail className="size-3.5 shrink-0" />
         <span className="flex-1">Want these landing in your inbox once a week? Subscribe below — fully personalised to the industries you explore.</span>
       </div>

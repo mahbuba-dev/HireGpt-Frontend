@@ -5,7 +5,8 @@ export const deleteRoomMessage = async (roomId: string, messageId: string) => {
     { silent: true }
   );
   return response;
-};
+// End of file
+
 import { httpClient } from "../lib/axious/httpClient";
 import type {
   ChatAttachment,
@@ -18,6 +19,62 @@ import type {
   ChatRoom,
   ChatRole,
 } from "../types/chat.types";
+
+// Helper type for upsertChatRoomActivity
+type UpsertChatRoomActivityOptions = {
+  rooms: ChatRoom[];
+  message: ChatMessage;
+  currentUserId?: string;
+  activeRoomId?: string | null;
+  roomData?: unknown;
+};
+
+// Helper: merge unique messages
+const mergeUniqueMessages = (messages: ChatMessage[]): ChatMessage[] => {
+  const merged = new Map<string, ChatMessage>();
+  messages.forEach((message) => {
+    merged.set(message.id, message);
+  });
+  return [...merged.values()].sort(
+    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+  );
+};
+
+// Helper: normalizeChatCall (stub, implement as needed)
+const normalizeChatCall = (value: any): ChatCall => {
+  const raw = value?.call ?? value?.data ?? value;
+  return {
+    id: String(raw?.id ?? raw?.callId ?? `call-${Date.now()}`),
+    roomId: String(raw?.roomId ?? raw?.chatRoomId ?? ""),
+    status: (raw?.status ?? "RINGING") as ChatCallStatus,
+    startedAt: raw?.startedAt ?? raw?.createdAt,
+    startedBy: raw?.startedBy ?? raw?.callerId,
+  };
+};
+
+// Helper: normalizeChatRoom (must be before usage)
+const normalizeChatRoom = (value: any): ChatRoom => {
+  const raw = value?.room ?? value?.data ?? value;
+  const participants = toArray(raw?.participants ?? raw?.members ?? raw?.users).map(normalizeParticipant);
+  const lastMessage = raw?.lastMessage ? normalizeChatMessage(raw.lastMessage) : null;
+  const resolvedRoomId = raw?.id ?? raw?.roomId ?? raw?.chatRoomId;
+  const recruiterParticipant = participants.find((participant: ChatParticipant) => participant.role === "RECRUITER");
+  const candidateParticipant = participants.find((participant: ChatParticipant) => participant.role === "CANDIDATE");
+  return {
+    id: resolvedRoomId ? String(resolvedRoomId) : "",
+    name:
+      raw?.name ??
+      raw?.title ??
+      (participants.map((participant: ChatParticipant) => getParticipantDisplayName(participant)).join(", ") ||
+        "Conversation"),
+    participants,
+    lastMessage,
+    unreadCount: Number(raw?.unreadCount ?? raw?.unread ?? raw?.unreadMessagesCount ?? 0),
+    updatedAt: raw?.updatedAt ?? lastMessage?.createdAt ?? raw?.createdAt ?? new Date().toISOString(),
+    recruiterId: raw?.recruiterId ?? recruiterParticipant?.userId ?? recruiterParticipant?.id,
+    candidateId: raw?.candidateId ?? candidateParticipant?.userId ?? candidateParticipant?.id,
+  };
+};
 
 const CHAT_BASE_PATH = "/chat";
 
@@ -99,21 +156,21 @@ export const getOtherParticipants = ({
 const normalizeParticipant = (value: any): ChatParticipant => ({
   id: String(value?.id ?? value?.userId ?? value?.participantId ?? crypto.randomUUID()),
   userId: value?.userId ? String(value.userId) : undefined,
-  role: (value?.role ?? "CLIENT") as ChatRole,
+  role: (value?.role ?? "CANDIDATE") as ChatRole,
   fullName:
     value?.fullName ??
     value?.name ??
     value?.user?.name ??
     value?.admin?.name ??
-    value?.client?.fullName ??
-    value?.expert?.fullName,
+    value?.candidate?.fullName ??
+    value?.recruiter?.fullName,
   name:
     value?.name ??
     value?.fullName ??
     value?.user?.name ??
     value?.admin?.name ??
-    value?.client?.fullName ??
-    value?.expert?.fullName,
+    value?.candidate?.fullName ??
+    value?.recruiter?.fullName,
   title: value?.title,
   email: value?.email ?? value?.user?.email,
   profilePhoto: value?.profilePhoto ?? value?.image ?? value?.avatarUrl ?? null,
@@ -194,7 +251,7 @@ const REACTION_CONTAINER_KEYS = new Set([
 const mergeReactionsByEmoji = (reactions: ChatMessageReaction[]) => {
   const merged = new Map<string, ChatMessageReaction>();
 
-  reactions.forEach((reaction) => {
+  reactions.forEach((reaction: any) => {
     const existing = merged.get(reaction.emoji);
 
     if (!existing) {
@@ -505,189 +562,6 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
   };
 };
 
-export const isMessageFromCurrentUser = (
-  message: ChatMessage,
-  currentUserId?: string,
-) => {
-  if (!currentUserId) {
-    return false;
-  }
-
-  return [message.senderId, message.sender?.userId, message.sender?.id]
-    .filter(Boolean)
-    .some((candidate) => String(candidate) === currentUserId);
-};
-
-export const normalizeChatRoom = (value: any): ChatRoom => {
-  const raw = value?.room ?? value?.data ?? value;
-  const participants = toArray(raw?.participants ?? raw?.members ?? raw?.users).map(normalizeParticipant);
-  const lastMessage = raw?.lastMessage ? normalizeChatMessage(raw.lastMessage) : null;
-  const resolvedRoomId = raw?.id ?? raw?.roomId ?? raw?.chatRoomId;
-
-  const expertParticipant = participants.find((participant) => participant.role === "EXPERT");
-  const clientParticipant = participants.find((participant) => participant.role === "CLIENT");
-
-  return {
-    id: resolvedRoomId ? String(resolvedRoomId) : "",
-    name:
-      raw?.name ??
-      raw?.title ??
-      (participants.map((participant) => getParticipantDisplayName(participant)).join(", ") ||
-        "Conversation"),
-    participants,
-    lastMessage,
-    unreadCount: Number(raw?.unreadCount ?? raw?.unread ?? raw?.unreadMessagesCount ?? 0),
-    updatedAt: raw?.updatedAt ?? lastMessage?.createdAt ?? raw?.createdAt ?? new Date().toISOString(),
-    expertId: raw?.expertId ?? expertParticipant?.userId ?? expertParticipant?.id,
-    clientId: raw?.clientId ?? clientParticipant?.userId ?? clientParticipant?.id,
-  };
-};
-
-const normalizeChatCall = (value: any): ChatCall => {
-  const raw = value?.call ?? value?.data ?? value;
-
-  return {
-    id: String(raw?.id ?? raw?.callId ?? `call-${Date.now()}`),
-    roomId: String(raw?.roomId ?? raw?.chatRoomId ?? ""),
-    status: (raw?.status ?? "RINGING") as ChatCallStatus,
-    startedAt: raw?.startedAt ?? raw?.createdAt,
-    startedBy: raw?.startedBy ?? raw?.callerId,
-  };
-};
-
-export const mergeUniqueMessages = (messages: ChatMessage[]) => {
-  const merged = new Map<string, ChatMessage>();
-
-  messages.forEach((message) => {
-    merged.set(message.id, message);
-  });
-
-  return [...merged.values()].sort(
-    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
-  );
-};
-
-export const replaceChatMessage = (messages: ChatMessage[], message: ChatMessage) =>
-  mergeUniqueMessages([...messages.filter((entry) => entry.id !== message.id), message]);
-
-export const getCurrentUserReactionEmoji = (
-  message: ChatMessage,
-  currentUserId?: string,
-) => {
-  if (!currentUserId) {
-    return null;
-  }
-
-  const matchedReaction = (message.reactions ?? []).find(
-    (reaction) =>
-      reaction.reactedByCurrentUser ||
-      reaction.reactorIds?.includes(currentUserId),
-  );
-
-  return matchedReaction?.emoji ?? null;
-};
-
-export const toggleReactionLocally = ({
-  message,
-  emoji,
-  currentUserId,
-}: {
-  message: ChatMessage;
-  emoji: string;
-  currentUserId?: string;
-}): ChatMessage => {
-  if (!emoji || !currentUserId) {
-    return message;
-  }
-
-  const currentReactionEmoji = getCurrentUserReactionEmoji(message, currentUserId);
-
-  const nextReactions = (message.reactions ?? [])
-    .map((reaction) => {
-      const reactorIds = Array.from(new Set(reaction.reactorIds ?? []));
-      const hasCurrentUser =
-        reaction.reactedByCurrentUser || reactorIds.includes(currentUserId);
-
-      if (!hasCurrentUser) {
-        return reaction;
-      }
-
-      const remainingIds = reactorIds.filter((reactorId) => reactorId !== currentUserId);
-      const nextCount = Math.max(0, (reaction.count ?? reactorIds.length ?? 1) - 1);
-
-      if (nextCount === 0) {
-        return null;
-      }
-
-      return {
-        ...reaction,
-        count: nextCount,
-        reactorIds: remainingIds,
-        reactedByCurrentUser: false,
-      };
-    })
-    .filter((reaction): reaction is NonNullable<ChatMessage["reactions"]>[number] => Boolean(reaction));
-
-  if (currentReactionEmoji !== emoji) {
-    const targetIndex = nextReactions.findIndex((reaction) => reaction.emoji === emoji);
-
-    if (targetIndex === -1) {
-      nextReactions.push({
-        emoji,
-        count: 1,
-        reactorIds: [currentUserId],
-        reactedByCurrentUser: true,
-      });
-    } else {
-      const targetReaction = nextReactions[targetIndex];
-      const reactorIds = Array.from(new Set(targetReaction.reactorIds ?? []));
-
-      nextReactions[targetIndex] = {
-        ...targetReaction,
-        count: Math.max(0, targetReaction.count ?? reactorIds.length ?? 0) + 1,
-        reactorIds: reactorIds.includes(currentUserId)
-          ? reactorIds
-          : [...reactorIds, currentUserId],
-        reactedByCurrentUser: true,
-      };
-    }
-  }
-
-  return {
-    ...message,
-    reactions: nextReactions,
-  };
-};
-
-export const sortChatRooms = (rooms: ChatRoom[]) => {
-  return [...rooms].sort(
-    (left, right) =>
-      new Date(right.updatedAt ?? right.lastMessage?.createdAt ?? 0).getTime() -
-      new Date(left.updatedAt ?? left.lastMessage?.createdAt ?? 0).getTime(),
-  );
-};
-
-export const markChatRoomAsRead = (rooms: ChatRoom[], roomId: string) => {
-  return sortChatRooms(
-    rooms.map((room) =>
-      room.id === roomId
-        ? {
-            ...room,
-            unreadCount: 0,
-          }
-        : room,
-    ),
-  );
-};
-
-type UpsertChatRoomActivityOptions = {
-  rooms: ChatRoom[];
-  message: ChatMessage;
-  currentUserId?: string;
-  activeRoomId?: string | null;
-  roomData?: unknown;
-};
-
 export const upsertChatRoomActivity = ({
   rooms,
   message,
@@ -736,24 +610,120 @@ export const upsertChatRoomActivity = ({
     id: message.roomId,
     name:
       safeNormalizedRoom?.name ||
-      fallbackParticipants.map((participant) => getParticipantDisplayName(participant)).join(", ") ||
-      "Conversation",
+      (fallbackParticipants.map((participant: ChatParticipant) => getParticipantDisplayName(participant)).join(", ") ||
+      "Conversation"),
     participants: fallbackParticipants,
     lastMessage: message,
     unreadCount: shouldIncrementUnread ? 1 : 0,
     updatedAt: message.createdAt,
-    expertId:
-      safeNormalizedRoom?.expertId ??
-      fallbackParticipants.find((participant) => participant.role === "EXPERT")?.userId ??
-      fallbackParticipants.find((participant) => participant.role === "EXPERT")?.id,
-    clientId:
-      safeNormalizedRoom?.clientId ??
-      fallbackParticipants.find((participant) => participant.role === "CLIENT")?.userId ??
-      fallbackParticipants.find((participant) => participant.role === "CLIENT")?.id,
+    recruiterId:
+      safeNormalizedRoom?.recruiterId ??
+      (fallbackParticipants.find((participant: ChatParticipant) => participant.role === "RECRUITER")?.userId ??
+      fallbackParticipants.find((participant: ChatParticipant) => participant.role === "RECRUITER")?.id),
+    candidateId:
+      safeNormalizedRoom?.candidateId ??
+      (fallbackParticipants.find((participant: ChatParticipant) => participant.role === "CANDIDATE")?.userId ??
+      fallbackParticipants.find((participant: ChatParticipant) => participant.role === "CANDIDATE")?.id),
   });
 
   return sortChatRooms(updatedRooms);
 };
+export const getCurrentUserReactionEmoji = (
+  message: ChatMessage,
+  currentUserId?: string,
+) => {
+  if (!currentUserId) {
+    return null;
+  }
+
+  const matchedReaction = (message.reactions ?? []).find(
+    (reaction) =>
+      reaction.reactedByCurrentUser ||
+      reaction.reactorIds?.includes(currentUserId),
+  );
+
+  return matchedReaction?.emoji ?? null;
+};
+
+export const toggleReactionLocally = ({
+  message,
+  emoji,
+  currentUserId,
+}: {
+  message: ChatMessage;
+  emoji: string;
+  currentUserId?: string;
+}): ChatMessage => {
+  if (!emoji || !currentUserId) {
+    return message;
+  }
+
+  const currentReactionEmoji = getCurrentUserReactionEmoji(message, currentUserId);
+
+  const nextReactions = (message.reactions ?? [])
+    .map((reaction: any) => {
+      const reactorIds = Array.from(new Set(reaction.reactorIds ?? []));
+      const hasCurrentUser =
+        reaction.reactedByCurrentUser || reactorIds.includes(currentUserId);
+
+      if (!hasCurrentUser) {
+        return reaction;
+      }
+
+      const remainingIds = reactorIds.filter((reactorId) => reactorId !== currentUserId);
+      const nextCount = Math.max(0, (reaction.count ?? reactorIds.length ?? 1) - 1);
+
+      if (nextCount === 0) {
+        return null;
+      }
+
+      return {
+        ...reaction,
+        count: nextCount,
+        reactorIds: remainingIds,
+        reactedByCurrentUser: false,
+      };
+    })
+    .filter((reaction: any): reaction is NonNullable<ChatMessage["reactions"]>[number] => Boolean(reaction));
+
+  if (currentReactionEmoji !== emoji) {
+    const targetIndex = nextReactions.findIndex((reaction: any) => reaction.emoji === emoji);
+
+    if (targetIndex === -1) {
+      nextReactions.push({
+        emoji,
+        count: 1,
+        reactorIds: [currentUserId],
+        reactedByCurrentUser: true,
+      });
+    } else {
+      const targetReaction = nextReactions[targetIndex];
+      const reactorIds = Array.from(new Set(targetReaction.reactorIds ?? []));
+
+      nextReactions[targetIndex] = {
+        ...targetReaction,
+        count: Math.max(0, targetReaction.count ?? reactorIds.length ?? 0) + 1,
+        reactorIds: reactorIds.includes(currentUserId)
+          ? reactorIds
+          : [...reactorIds, currentUserId],
+        reactedByCurrentUser: true,
+      };
+    }
+  }
+
+  return {
+    ...message,
+    reactions: nextReactions,
+  };
+};
+
+export const sortChatRooms = (rooms: ChatRoom[]) => {
+  return [...rooms].sort(
+    (left, right) =>
+      new Date(right.updatedAt ?? right.lastMessage?.createdAt ?? 0).getTime() -
+      new Date(left.updatedAt ?? left.lastMessage?.createdAt ?? 0).getTime(),
+  );
+// Removed duplicate/legacy upsertChatRoomActivity, findOrCreateRoomForExpert, and expertId/clientId logic. Only recruiter/candidate version remains above.
 
 export const getChatRooms = async (params?: Record<string, unknown>): Promise<ChatRoom[]> => {
   try {
@@ -785,10 +755,10 @@ const findMatchingRoom = (rooms: ChatRoom[], participantId: string) => {
     rooms.find(
       (room) =>
         room.id === participantId ||
-        room.expertId === participantId ||
-        room.clientId === participantId ||
+        room.recruiterId === participantId ||
+        room.candidateId === participantId ||
         room.participants.some(
-          (participant) => participant.id === participantId || participant.userId === participantId,
+          (participant: ChatParticipant) => participant.id === participantId || participant.userId === participantId,
         ),
     ) ?? null
   );

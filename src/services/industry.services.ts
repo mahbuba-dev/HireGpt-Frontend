@@ -1,11 +1,11 @@
 import type {
-  IIndustry,
-  IIndustryCreatePayload,
-  IIndustryUpdatePayload,
+  IJobCategory,
+  IJobCategoryCreatePayload,
+  IJobCategoryUpdatePayload,
 } from "@/src/types/industry.types";
 import { httpClient } from "../lib/axious/httpClient";
 
-type IndustryQueryParams = {
+type JobCategoryQueryParams = {
   page?: number;
   limit?: number;
   searchTerm?: string;
@@ -15,13 +15,13 @@ type IndustryQueryParams = {
 };
 
 // GET ALL
-export const getAllIndustries = async (
-  params?: IndustryQueryParams | string,
+export const getAllJobCategories = async (
+  params?: JobCategoryQueryParams | string,
 ) => {
   try {
     if (typeof params === "string") {
-      const res = await httpClient.get<IIndustry[]>(
-        params ? `/industries?${params}` : "/industries",
+      const res = await httpClient.get<IJobCategory[]>(
+        params ? `/job-categories?${params}` : "/job-categories",
       );
 
       return {
@@ -30,7 +30,7 @@ export const getAllIndustries = async (
       };
     }
 
-    const res = await httpClient.get<IIndustry[]>("/industries", {
+    const res = await httpClient.get<IJobCategory[]>("/job-categories", {
       params: (params ?? {}) as Record<string, unknown>,
       silent: true,
     });
@@ -45,20 +45,20 @@ export const getAllIndustries = async (
   }
 };
 
-export const getIndustries = async (): Promise<IIndustry[]> => {
-  const res = await getAllIndustries();
-  console.log("industries:", res.data);
+export const getJobCategories = async (): Promise<IJobCategory[]> => {
+  const res = await getAllJobCategories();
+  console.log("job categories:", res.data);
   return Array.isArray(res.data) ? res.data : [];
 };
 
 // CREATE
-export const createIndustry = async (formData: FormData) => {
+export const createJobCategory = async (formData: FormData) => {
   try {
     const res = await httpClient.post<{
       success: boolean;
       message: string;
       data: any;
-    }>("/industries", formData, {
+    }>("/job-categories", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       silent: true,
     });
@@ -66,7 +66,7 @@ export const createIndustry = async (formData: FormData) => {
   } catch (error: any) {
     // Normalize error so UI can handle gracefully and terminal never crashes
     const status = error?.response?.status;
-    const message = error?.response?.data?.message || error?.message || "Failed to create industry";
+    const message = error?.response?.data?.message || error?.message || "Failed to create job category";
     return {
       success: false,
       message,
@@ -77,7 +77,7 @@ export const createIndustry = async (formData: FormData) => {
   }
 };
 // UPDATE
-export const updateIndustry = async (id: string, payload: IIndustryUpdatePayload) => {
+export const updateJobCategory = async (id: string, payload: IJobCategoryUpdatePayload) => {
   const trimmedName = payload.name?.trim();
   const trimmedDescription = payload.description?.trim();
 
@@ -100,20 +100,20 @@ export const updateIndustry = async (id: string, payload: IIndustryUpdatePayload
 
   const attempts: Array<() => Promise<unknown>> = hasFile
     ? [
-        () => httpClient.patch<IIndustry>(`/industries/${id}`, formData, multipartOptions),
-        () => httpClient.put<IIndustry>(`/industries/${id}`, formData, multipartOptions),
-        () => httpClient.patch<IIndustry>(`/industry/${id}`, formData, multipartOptions),
-        () => httpClient.put<IIndustry>(`/industry/${id}`, formData, multipartOptions),
-        () => httpClient.patch<IIndustry>(`/industries/update/${id}`, formData, multipartOptions),
-        () => httpClient.put<IIndustry>(`/industries/update/${id}`, formData, multipartOptions),
+        () => httpClient.patch<IJobCategory>(`/job-categories/${id}`, formData, multipartOptions),
+        () => httpClient.put<IJobCategory>(`/job-categories/${id}`, formData, multipartOptions),
+        () => httpClient.patch<IJobCategory>(`/job-category/${id}`, formData, multipartOptions),
+        () => httpClient.put<IJobCategory>(`/job-category/${id}`, formData, multipartOptions),
+        () => httpClient.patch<IJobCategory>(`/job-categories/update/${id}`, formData, multipartOptions),
+        () => httpClient.put<IJobCategory>(`/job-categories/update/${id}`, formData, multipartOptions),
       ]
     : [
-        () => httpClient.patch<IIndustry>(`/industries/${id}`, jsonBody, jsonOptions),
-        () => httpClient.put<IIndustry>(`/industries/${id}`, jsonBody, jsonOptions),
-        () => httpClient.patch<IIndustry>(`/industry/${id}`, jsonBody, jsonOptions),
-        () => httpClient.put<IIndustry>(`/industry/${id}`, jsonBody, jsonOptions),
-        () => httpClient.patch<IIndustry>(`/industries/update/${id}`, jsonBody, jsonOptions),
-        () => httpClient.put<IIndustry>(`/industries/update/${id}`, jsonBody, jsonOptions),
+        () => httpClient.patch<IJobCategory>(`/job-categories/${id}`, jsonBody, jsonOptions),
+        () => httpClient.put<IJobCategory>(`/job-categories/${id}`, jsonBody, jsonOptions),
+        () => httpClient.patch<IJobCategory>(`/job-category/${id}`, jsonBody, jsonOptions),
+        () => httpClient.put<IJobCategory>(`/job-category/${id}`, jsonBody, jsonOptions),
+        () => httpClient.patch<IJobCategory>(`/job-categories/update/${id}`, jsonBody, jsonOptions),
+        () => httpClient.put<IJobCategory>(`/job-categories/update/${id}`, jsonBody, jsonOptions),
       ];
 
   for (let index = 0; index < attempts.length; index += 1) {
@@ -125,31 +125,31 @@ export const updateIndustry = async (id: string, payload: IIndustryUpdatePayload
       const isLastAttempt = index === attempts.length - 1;
 
       if (status !== 404 || isLastAttempt) {
-        console.log("Error updating industry:", error);
+        console.log("Error updating job category:", error);
         throw error;
       }
     }
   }
 
-  throw new Error("Failed to update industry");
+  throw new Error("Failed to update job category");
 };
 
 // DELETE
-export const deleteIndustry = async (id: string) => {
+export const deleteJobCategory = async (id: string) => {
   try {
-    return await httpClient.delete<boolean>(`/industries/${id}`);
+    return await httpClient.delete<boolean>(`/job-categories/${id}`);
   } catch (error) {
-    console.log("Error deleting industry:", error);
+    console.log("Error deleting job category:", error);
     throw error;
   }
 };
 
 // GET BY ID
-export const getIndustryById = async (id: string) => {
+export const getJobCategoryById = async (id: string) => {
   try {
-    return await httpClient.get<IIndustry>(`/industries/${id}`);
+    return await httpClient.get<IJobCategory>(`/job-categories/${id}`);
   } catch (error) {
-    console.log("Error fetching industry by id:", error);
+    console.log("Error fetching job category by id:", error);
     throw error;
   }
 };

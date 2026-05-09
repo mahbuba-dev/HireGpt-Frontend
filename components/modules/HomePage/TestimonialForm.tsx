@@ -30,11 +30,11 @@ export default function TestimonialForm({ onSuccess }: { onSuccess?: () => void 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4 border rounded-lg">
+    <form onSubmit={handleSubmit} className="glass-card section-spacing section-padding space-y-5 w-full max-w-md mx-auto">
       <div>
-        <label className="block mb-1 font-medium">Your Feedback</label>
+        <label className="block mb-1 h2">Your Feedback</label>
         <textarea
-          className="w-full border rounded p-2"
+          className="w-full rounded-xl border border-white/15 bg-slate-950/30 p-3 text-base text-white placeholder:text-slate-300/70 outline-none transition focus:border-cyan-400"
           value={content}
           onChange={e => setContent(e.target.value)}
           required
@@ -42,22 +42,22 @@ export default function TestimonialForm({ onSuccess }: { onSuccess?: () => void 
         />
       </div>
       <div>
-        <label className="block mb-1 font-medium">Rating</label>
+        <label className="block mb-1 h2">Rating</label>
         <input
           type="number"
           min={1}
           max={5}
           value={rating}
           onChange={e => setRating(Number(e.target.value))}
-          className="w-20 border rounded p-1"
+          className="w-20 rounded-xl border border-white/15 bg-slate-950/30 p-2 text-base text-white outline-none transition focus:border-cyan-400"
           required
         />
-        <span className="ml-2">/ 5</span>
+        <span className="ml-2 text-base">/ 5</span>
       </div>
       <div>
-        <label className="block mb-1 font-medium">Meta (optional)</label>
+        <label className="block mb-1 h2">Meta <span className="muted">(optional)</span></label>
         <input
-          className="w-full border rounded p-2"
+          className="w-full rounded-xl border border-white/15 bg-slate-950/30 p-3 text-base text-white placeholder:text-slate-300/70 outline-none transition focus:border-cyan-400"
           value={meta}
           onChange={e => setMeta(e.target.value)}
           placeholder="e.g. Job Title, Company, etc."
@@ -67,7 +67,7 @@ export default function TestimonialForm({ onSuccess }: { onSuccess?: () => void 
       {success && <div className="text-green-600">Thank you for your feedback!</div>}
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        className="btn-primary w-full py-2 rounded-xl text-lg font-semibold disabled:opacity-50"
         disabled={loading}
       >
         {loading ? "Submitting..." : "Submit Testimonial"}

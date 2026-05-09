@@ -139,7 +139,7 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
   };
 
   return (
-    <section id="newsletter-section" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-blue-100/70 bg-white/50 p-6 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-9 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44">
+    <section id="newsletter-section" className="page-container section-spacing glass-card">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(128deg,rgba(255,255,255,0.45),rgba(255,255,255,0.08)_44%,rgba(56,189,248,0.1)_100%)] dark:bg-[linear-gradient(128deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_44%,rgba(56,189,248,0.08)_100%)]"
@@ -153,18 +153,18 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
         className="pointer-events-none absolute -bottom-20 left-0 size-60 rounded-full bg-blue-300/20 blur-3xl dark:bg-blue-500/10"
       />
 
-      <div className="relative grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <div className="relative section-grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
         <div className="space-y-4">
           <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
             <Mail className="size-3.5" />
             ConsultEdge weekly
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+          <h2 className="h2">
             {personalised
               ? "A weekly digest, tailored to what you actually care about"
               : "A weekly digest from the best industry experts"}
           </h2>
-          <p className="text-sm text-muted-foreground md:text-base">
+          <p className="text-base muted">
             One short email, every Tuesday. Trending experts, curated playbooks, and subscriber-only offers — no fluff, easy to unsubscribe.
           </p>
 
@@ -210,12 +210,12 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs muted">
             We respect your inbox. One email a week · unsubscribe anytime.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-blue-200/60 bg-white/80 p-5 backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+        <div className="glass-card p-5">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">
             <Newspaper className="size-3.5" />
             {personalised ? "Your next issue will include" : "What you'll get"}

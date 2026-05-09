@@ -1,8 +1,8 @@
-// DEPRECATED: Use candidate.service.ts for all candidate-related logic. This file is no longer maintained.
+// Candidate service: all candidate-related logic, aligned to recruiter/candidate/jobCategory/application/interview domain.
 
 import { httpClient } from "../lib/axious/httpClient";
 import type { ApiResponse } from "../types/api.types";
-import type { UserManagementItem, IUserManagementQueryParams } from "../types/user.types";
+import type { IUserManagementQueryParams } from "../types/user.types";
 
 export interface ICandidate {
   id: string;
@@ -20,7 +20,7 @@ export interface ICandidate {
   isDeleted: boolean;
   deletedAt?: string | null;
   userId: string;
-  resumeid?: string | null;
+  resumeId?: string | null;
   createdAt: string;
   updatedAt: string;
   // Relations (optional)

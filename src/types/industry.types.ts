@@ -1,6 +1,6 @@
 import { ApiResponse } from "./api.types";
 
-export interface IIndustry {
+export interface IJobCategory {
   id: string;
   name: string;
   description: string | null;
@@ -10,16 +10,16 @@ export interface IIndustry {
   isDeleted: boolean;
 }
 
-export interface IIndustryCreatePayload {
+export interface IJobCategoryCreatePayload {
   name: string;
   description?: string | null;
   file?: File | null; // MUST be "file" because backend uses multerUpload.single("file")
 }
 
-export interface IIndustryUpdatePayload {
+export interface IJobCategoryUpdatePayload {
   name?: string;
   description?: string | null;
   file?: File | null; // MUST be "file" because backend uses multerUpload.single("file")
 }
 
-export type IIndustryListResponse = ApiResponse<IIndustry[]>;
+export type IJobCategoryListResponse = ApiResponse<IJobCategory[]>;

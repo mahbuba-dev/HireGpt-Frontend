@@ -1,7 +1,7 @@
-import type { IExpert } from "./expert.types";
+import type { IRecruiter } from "./recruiter.types";
 import { ITestimonial } from "./testimonial.types";
 
-export type ConsultationStatus =
+export type InterviewStatus =
   | "PENDING"
   | "CONFIRMED"
   | "COMPLETED"
@@ -31,7 +31,6 @@ export interface IPayment {
   updatedAt: string;
 }
 
-export interface IClientBasicInfo {
   id: string;
   fullName: string;
   email: string;
@@ -54,47 +53,47 @@ export interface IClientBasicInfo {
 //   createdAt: string;
 //   updatedAt: string;
 // }
-export interface IConsultation {
+export interface IInterview {
   id: string;
   videoCallId: string;
-  status: ConsultationStatus;
+  status: InterviewStatus;
   paymentStatus: PaymentStatus;
   date: string;
-  clientId: string;
-  expertId?: string | null;
-  expertScheduleId: string;
-  client?: IClientBasicInfo | null;
-  expert?: IExpert | null;
-  expertSchedule?: IExpertSchedule | null;
+  candidateId: string;
+  recruiterId?: string | null;
+  recruiterScheduleId: string;
+  candidate?: IClientBasicInfo | null;
+  recruiter?: IRecruiter | null;
+  recruiterSchedule?: IRecruiterSchedule | null;
   payment?: IPayment | null;
-  testimonial?: ITestimonial | null;   // ✅ ADD THIS
+  testimonial?: ITestimonial | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface IExpertSchedule {
+export interface IRecruiterSchedule {
   id: string;
-  expertId: string;
+  recruiterId: string;
   scheduleId: string;
-  consultationId?: string | null;
+  interviewId?: string | null;
   isBooked: boolean;
   isDeleted?: boolean;
   deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   schedule?: IScheduleSlot | null;
-  expert?: IExpert | null;
-  consultation?: IConsultation | null;
+  recruiter?: IRecruiter | null;
+  interview?: IInterview | null;
 }
 
-export interface IBookConsultationPayload {
-  expertId: string;
-  expertScheduleId: string;
+export interface IBookInterviewPayload {
+  recruiterId: string;
+  recruiterScheduleId: string;
   couponCode?: string;
 }
 
-export interface IBookConsultationResult {
-  consultation: IConsultation;
+export interface IBookInterviewResult {
+  interview: IInterview;
   payment: IPayment;
   paymentUrl?: string | null;
 }

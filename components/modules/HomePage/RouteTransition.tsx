@@ -10,7 +10,7 @@ export default function RouteTransition({ children }: RouteTransitionProps) {
   const pathname = usePathname();
 
   return (
-    <div key={pathname} className="consultedge-route-enter">
+    <div key={pathname} className="hiregpt-route-enter">
       {children}
     </div>
   );

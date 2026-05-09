@@ -53,8 +53,8 @@ export default function InViewReveal({
   return (
     <div
       ref={elementRef}
-      style={{ "--consultedge-delay": `${delay}ms` } as CSSProperties}
-      className={cn("consultedge-reveal", isVisible && "consultedge-reveal--visible", className)}
+      style={{ "--hiregpt-delay": `${delay}ms` } as CSSProperties}
+      className={cn("hiregpt-reveal", isVisible && "hiregpt-reveal--visible", className)}
     >
       {children}
     </div>

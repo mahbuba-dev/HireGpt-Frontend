@@ -33,48 +33,48 @@ export default function HomeSearchBar({
 
   const suggestions = useMemo(() => filterNavigationSuggestions(query), [query]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onClickOutside = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [query, open]);
-
-  useEffect(() => {
-    if (variant !== "navbar") return;
-
-    const onSlashFocus = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
-      const tagName = target?.tagName?.toLowerCase();
-      if (tagName === "input" || tagName === "textarea" || target?.isContentEditable) return;
-      event.preventDefault();
-      setOpen(true);
-      inputRef.current?.focus();
-    };
-
-    document.addEventListener("keydown", onSlashFocus);
-    return () => document.removeEventListener("keydown", onSlashFocus);
-  }, [variant]);
-
-  const closeDropdown = () => {
-    setOpen(false);
-    onNavigate?.();
-  };
-
-  const handleSelect = (item: NavigationSuggestion) => {
-    setQuery("");
-    closeDropdown();
-    navigateToSuggestion(router, item, onNavigate);
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative w-full max-w-xl",
+        variant === "navbar"
+          ? "hidden md:block"
+          : "block w-full px-2 py-2 md:hidden",
+        className,
+      )}
+    >
+      <div className="glass-card flex items-center gap-2 rounded-full px-4 py-2 transition focus-within:border-cyan-400 focus-within:shadow-[0_0_0_4px_rgba(34,211,238,0.12)]">
+        <Search className="size-5 text-slate-400 dark:text-slate-500" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder="Search jobs, experts, or sections..."
+          className="flex-1 bg-transparent py-1 text-base outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+        {!!query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-white"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+      <HomeSearchDropdown
+        open={open && suggestions.length > 0}
+        suggestions={suggestions}
+        activeIndex={activeIndex}
+        onHover={setActiveIndex}
+        onSelect={handleSelect}
+      />
+    </div>
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

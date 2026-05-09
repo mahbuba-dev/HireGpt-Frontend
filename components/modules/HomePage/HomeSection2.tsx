@@ -103,7 +103,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-(--ce-shell-radius) border border-border/60 bg-white/52 p-5 shadow-(--ce-shell-shadow-soft) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/45">
+      <section className="page-container section-spacing glass-card">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(124deg,rgba(255,255,255,0.45),rgba(255,255,255,0.1)_45%,rgba(59,130,246,0.08)_100%)] dark:bg-[linear-gradient(124deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_45%,rgba(56,189,248,0.08)_100%)]"
@@ -113,17 +113,16 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
           <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
             Who it&apos;s built for
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <h2 className="h2">
             Expert guidance for every professional who moves fast
           </h2>
-          <p className="text-sm text-muted-foreground md:text-base">
-            ConsultEdge connects you with verified industry professionals across business, technology,
-            finance, marketing, and strategy — so you make smarter decisions, faster.
+          <p className="text-base muted">
+            ConsultEdge connects you with verified industry professionals across business, technology, finance, marketing, and strategy — so you make smarter decisions, faster.
           </p>
         </div>
 
         {/* Audience cards */}
-        <div className="relative mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="relative mt-8 grid gap-4 section-grid xl:grid-cols-4">
           {audiences.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -155,8 +154,8 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Trust signals + CTA */}
-        <div className="consultedge-reveal--visible relative mt-8 rounded-[1.8rem] border border-border/60 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 text-white shadow-sm dark:border-white/10" style={{ animationDelay: "520ms" }}>
-          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center lg:p-8">
+        <div className="consultedge-reveal--visible relative mt-8 glass-card text-white" style={{ animationDelay: "520ms" }}>
+          <div className="grid gap-6 section-padding lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="grid gap-4 sm:grid-cols-3">
               {trustSignals.map((signal) => {
                 const Icon = signal.icon;
@@ -192,8 +191,8 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
       </section>
 
-      <section id="home-testimonials" className="mt-6 scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-blue-200/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-950 p-5 text-white shadow-(--ce-shell-shadow-strong) md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-9 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10">
-        <div className="relative overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/6 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] backdrop-blur-xl md:p-7">
+      <section id="home-testimonials" className="page-container section-spacing glass-card text-white">
+        <div className="relative overflow-hidden glass-card p-5 md:p-7">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(147,197,253,0.35),transparent_32%),radial-gradient(circle_at_86%_80%,rgba(34,211,238,0.24),transparent_34%)]"

@@ -1,16 +1,16 @@
 import { BarChartData, PieChartData } from "./dashboard.types";
 
 export interface IAdminDashboardStats {
-  expertCount: number;
-  clientCount: number;
-  consultationCount: number;
-  industryCount: number;
+  recruiterCount: number;
+  candidateCount: number;
+  interviewCount: number;
+  jobCategoryCount: number;
   paymentCount: number;
   userCount: number;
 
   totalRevenue: number;
 
-  consultationStatusDistribution: PieChartData[];
+  interviewStatusDistribution: PieChartData[];
 
   revenueByMonth: BarChartData[];
 }

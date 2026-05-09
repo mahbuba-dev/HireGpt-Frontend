@@ -44,7 +44,7 @@ import axios from "axios";
 import type { Job } from "@/src/types/job.types";
 
 // ...existing code...
-// The rest of the logic is a 1:1 refactor of expert.services.ts, replacing expert/industry with job/jobCategory, etc.
+// The rest of the logic is a 1:1 refactor of recruiter.services.ts, replacing recruiter/jobCategory/candidate/interview/application, etc.
 // ...existing code...
 
 // Helper functions adapted from expert.services.ts

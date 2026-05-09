@@ -44,7 +44,7 @@ export default function TestimonialsCarousel() {
 
   if (loading) {
     return (
-      <section className="content-container section-spacing text-center">
+      <section className="page-container section-spacing text-center">
         <div className="muted">Loading testimonials...</div>
       </section>
     );
@@ -52,7 +52,7 @@ export default function TestimonialsCarousel() {
 
   if (error) {
     return (
-      <section className="content-container section-spacing text-center">
+      <section className="page-container section-spacing text-center">
         <div className="text-destructive">{error}</div>
       </section>
     );
@@ -60,7 +60,7 @@ export default function TestimonialsCarousel() {
 
   if (!testimonials.length) {
     return (
-      <section className="content-container section-spacing text-center">
+      <section className="page-container section-spacing text-center">
         <div className="muted">No testimonials yet.</div>
       </section>
     );
@@ -69,9 +69,9 @@ export default function TestimonialsCarousel() {
   const t = testimonials[index];
 
   return (
-    <section className="content-container section-spacing">
+    <section className="page-container section-spacing">
       <div
-        className={`relative flex flex-col items-center text-center transition-opacity duration-[${FADE_DURATION}ms] ${fade ? "opacity-100" : "opacity-0"}`}
+        className={`glass-card relative flex flex-col items-center text-center transition-opacity duration-[${FADE_DURATION}ms] ${fade ? "opacity-100" : "opacity-0"}`}
       >
         <div
           className={`mb-4 flex items-center justify-center transition-transform duration-200 ease-out ${

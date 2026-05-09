@@ -1,4 +1,4 @@
-export type ChatRole = "CLIENT" | "EXPERT" | "ADMIN";
+export type ChatRole = "CANDIDATE" | "RECRUITER" | "ADMIN";
 
 export type ChatMessageType = "TEXT" | "FILE" | "IMAGE" | "SYSTEM";
 
@@ -56,8 +56,8 @@ export interface ChatRoom {
   lastMessage?: ChatMessage | null;
   unreadCount?: number;
   updatedAt?: string;
-  expertId?: string;
-  clientId?: string;
+  recruiterId?: string;
+  candidateId?: string;
 }
 
 export interface PresenceState {

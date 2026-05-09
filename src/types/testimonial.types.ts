@@ -2,19 +2,19 @@ export interface ITestimonial {
   id: string;
   rating: number;
   comment?: string | null;
-  clientId: string;
-  expertId: string;
+  candidateId: string;
+  recruiterId: string;
   reviewerName?: string | null;
   reviewerImage?: string | null;
-  consultationId: string;
+  interviewId: string;
   createdAt: string;
   updatedAt?: string;
   isHidden?: boolean;
   status?: "APPROVED" | "HIDDEN" | "PENDING";
-  expertReply?: string | null;
+  recruiterReply?: string | null;
   repliedAt?: string;
   moderationStatus?: string;
-  client?: {
+  candidate?: {
     id?: string;
     fullName?: string;
     email?: string;
@@ -23,12 +23,12 @@ export interface ITestimonial {
       email?: string;
     } | null;
   } | null;
-  expert?: {
+  recruiter?: {
     id?: string;
     fullName?: string;
     title?: string;
   } | null;
-  consultation?: {
+  interview?: {
     id?: string;
     date?: string;
     status?: string;

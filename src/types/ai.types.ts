@@ -1,10 +1,10 @@
-export type AIRequestSource = "homepage" | "navbar" | "experts-page" | "newsletter" | "content";
+export type AIRequestSource = "homepage" | "navbar" | "recruiters-page" | "newsletter" | "content";
 
 export interface AIBehaviorContext {
-  /** Top industry IDs by weight (most-relevant first). */
-  industryIds?: string[];
+  /** Top jobCategory IDs by weight (most-relevant first). */
+  jobCategoryIds?: string[];
   recentSearches?: string[];
-  recentExpertIds?: string[];
+  recentRecruiterIds?: string[];
   hasSignal?: boolean;
 }
 
@@ -12,13 +12,13 @@ export interface AIBehaviorContext {
 // Recommendations
 // ---------------------------------------------
 export interface AIRecommendationRequest {
-  viewedExperts: string[];
-  exploredIndustries: string[];
+  viewedRecruiters: string[];
+  exploredJobCategories: string[];
   searchHistory: string[];
   clickedCategories: string[];
 }
 
-export interface AIRecommendationExpert {
+export interface AIRecommendationRecruiter {
   name: string;
   title: string;
   specialization: string;
@@ -32,20 +32,20 @@ export interface AIRecommendationExpert {
 export interface AIRecommendationResponse {
   mode: "cold-start" | "personalized";
   activityCount: number;
-  experts: AIRecommendationExpert[];
+  recruiters: AIRecommendationRecruiter[];
 }
 
 // ---------------------------------------------
-// Admin industry creation
+// Admin jobCategory creation
 // ---------------------------------------------
-export interface AIIndustryCreationRequest {
-  industryName: string;
+export interface AIJobCategoryCreationRequest {
+  jobCategoryName: string;
 }
 
-export interface AIIndustryCreationResponse {
-  industryName: string;
-  industryDescription: string;
-  idealExpertTypes: string[];
+export interface AIJobCategoryCreationResponse {
+  jobCategoryName: string;
+  jobCategoryDescription: string;
+  idealRecruiterTypes: string[];
   commonUseCases: string[];
   shortTagline: string;
 }
@@ -54,8 +54,8 @@ export interface AIIndustryCreationResponse {
 // Search
 // ---------------------------------------------
 export interface AISearchUserActivity {
-  viewedExperts: string[];
-  exploredIndustries: string[];
+  viewedRecruiters: string[];
+  exploredJobCategories: string[];
   searchHistory: string[];
   clickedCategories: string[];
 }
@@ -65,21 +65,21 @@ export interface AISearchRequest {
   userActivity: AISearchUserActivity;
 }
 
-export type AISearchResultType = "expert" | "industry" | "testimonial" | "trending";
+export type AISearchResultType = "recruiter" | "jobCategory" | "testimonial" | "trending";
 
 export interface AISearchResultItem {
   id: string;
   type: AISearchResultType;
   label: string;
   subLabel?: string;
-  expertId?: string;
+  recruiterId?: string;
   slug?: string;
   matchScore?: number;
 }
 
 export interface AISearchResponse {
-  experts: AISearchResultItem[];
-  industries: AISearchResultItem[];
+  recruiters: AISearchResultItem[];
+  jobCategories: AISearchResultItem[];
   testimonials: AISearchResultItem[];
   trending: AISearchResultItem[];
   aiSuggestions: AISearchResultItem[];
@@ -94,9 +94,9 @@ export interface AISummaryRequest {
   text?: string;
   /** Optional audience hint passed to backend summarizer. */
   audience?: string;
-  /** Free-form topic, industry name, or query string. */
+  /** Free-form topic, jobCategory name, or query string. */
   topic: string;
-  industryIds?: string[];
+  jobCategoryIds?: string[];
   /** Optional summary kind so backend can pick a template. */
   kind?: "newsletter-preview" | "content-suggestions" | "expert-bio" | "generic";
   source?: AIRequestSource;

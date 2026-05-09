@@ -80,7 +80,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className=" border-t border-slate-800 bg-slate-950 text-slate-200">
+    <footer className="border-t border-slate-800 bg-slate-950 text-slate-200 section-spacing">
       <style>{`
         .footer-fade-up {
           transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
@@ -118,22 +118,22 @@ export default function Footer() {
         }
       `}</style>
 
-      <div ref={footerRef} className="mx-auto w-full max-w-360 px-4 pt-8 md:px-6">
+      <div ref={footerRef} className="page-container">
         {/* CTA SECTION */}
-        <div className="relative overflow-hidden rounded-[2.1rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-6 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8 lg:p-10">
+        <div className="glass-card relative overflow-hidden section-spacing p-6 md:p-8 lg:p-10">
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-4">
 
-              <Badge className="border-white/15 bg-white/10 text-white">
+              <Badge className="border-white/15 bg-white/10 text-white premium-card">
                 <Gem className="mr-1 size-3.5" />
                 Ready to get hired or hire?
               </Badge>
 
               <div>
-                <h2 className="text-2xl font-bold text-white md:text-3xl lg:text-4xl">
+                <h2 className="h2 text-white">
                   Find your next job or top talent with HireGPT.
                 </h2>
-                <p className="max-w-2xl text-sm text-slate-300 md:text-base">
+                <p className="max-w-2xl text-base muted">
                   Discover AI-matched jobs and recruiters, apply with confidence, and let HireGPT power your career journey.
                 </p>
               </div>
@@ -171,12 +171,12 @@ export default function Footer() {
       </div>
 
       {/* MAIN FOOTER */}
-      <div className="mx-auto px-4 mt-2 grid w-full max-w-360 items-start gap-10  py-12 md:grid-cols-[1.1fr_0.65fr_0.65fr_0.65fr_1fr] md:px-6">
+      <div className="page-container mt-2 grid w-full items-start gap-10 section-padding md:grid-cols-[1.1fr_0.65fr_0.65fr_0.65fr_1fr]">
 
         {/* BRAND */}
-        <div className="space-y-5 pl-10">
+        <div className="space-y-5 pl-0">
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-cyan-600 to-sky-500 text-white">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white">
               <Gem className="size-5" />
             </div>
             <div>
@@ -186,7 +186,7 @@ export default function Footer() {
           </Link>
 
 
-          <p className="text-sm text-slate-300 px-2">
+          <p className="text-base muted">
             The modern AI platform connecting candidates and recruiters for smarter hiring and career growth.
           </p>
 
@@ -211,11 +211,11 @@ export default function Footer() {
 
         {/* QUICK LINKS (FIXED ALIGNMENT) */}
         <div>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
             Quick links
           </h3>
 
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-base">
             {quickLinks.map((link) => (
               <Link
                 key={link.href}
@@ -230,11 +230,11 @@ export default function Footer() {
 
         {/* PLATFORM (FIXED ALIGNMENT) */}
         <div>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
             Platform
           </h3>
 
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-base">
             {platformLinks.map((link) => (
               <Link
                 key={link.href}
@@ -249,11 +249,11 @@ export default function Footer() {
 
         {/* LEGAL */}
         <div>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
             Legal
           </h3>
 
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-base">
             {legalLinks.map((link) => (
               <Link
                 key={link.href}
@@ -268,10 +268,10 @@ export default function Footer() {
 
         {/* CONTACT */}
         <div>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
             Contact
           </h3>
-          <div className="space-y-4 text-sm text-slate-300">
+          <div className="space-y-4 text-base muted">
           <div className="flex items-center gap-2">
             <Mail className="size-4 shrink-0" />
             support@hiregpt.ai
@@ -290,7 +290,7 @@ export default function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-360 flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
+        <div className="page-container flex flex-col items-center justify-between gap-2 py-4 text-base muted md:flex-row">
           <p>© {new Date().getFullYear()} HireGPT</p>
           <div className="flex gap-4">
             <Link href="/about" className="hover:text-white">About</Link>

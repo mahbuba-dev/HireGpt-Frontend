@@ -131,16 +131,14 @@ const NavbarClient = ({
         <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex items-center gap-3">
-  
-    <Image
-      src="/logo-consultedge - Copy.png"
-      alt="ConsultEdge"
-      width={80}
-      height={80}
-      className="h-full w-full object-contain rounded-full"
-    />
-  
-</Link>
+            <Image
+              src="/logo-hiregpt.png"
+              alt="HireGPT"
+              width={80}
+              height={80}
+              className="h-full w-full object-contain rounded-full"
+            />
+          </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-white/75 px-2 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60 lg:flex">
             {visiblePrimary.map((item) => {
@@ -326,19 +324,19 @@ const NavbarClient = ({
                 <SheetHeader className="px-4 pb-2">
                   <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
                     <div className="mb-3 flex items-center gap-3.5">
-                      <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center overflow-hidden rounded-2xl border border-blue-200/60 bg-linear-to-br from-white via-blue-50 to-cyan-50 p-1 shadow-[0_14px_34px_-20px_rgba(59,130,246,0.65)] ring-1 ring-white/80 dark:border-cyan-400/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 dark:ring-white/10">
+                      <div className="flex h-13 w-13 items-center justify-center overflow-hidden rounded-2xl border border-blue-200/60 bg-linear-to-br from-white via-blue-50 to-cyan-50 p-1 shadow-[0_14px_34px_-20px_rgba(59,130,246,0.65)] ring-1 ring-white/80 dark:border-cyan-400/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 dark:ring-white/10">
                         <Image
-                          src="/logo-consultedge.png"
-                          alt="ConsultEdge"
+                          src="/logo-hiregpt.png"
+                          alt="HireGPT"
                           width={48}
                           height={48}
                           className="h-full w-full object-contain"
                         />
                       </div>
                       <div className="flex-1">
-                        <SheetTitle className="text-lg font-semibold tracking-tight">ConsultEdge</SheetTitle>
+                        <SheetTitle className="text-lg font-semibold tracking-tight">HireGPT</SheetTitle>
                         <SheetDescription className="text-xs md:text-sm">
-                          Premium expert consultation network.
+                          AI-powered hiring and job matching platform.
                         </SheetDescription>
                       </div>
                       <Button
@@ -355,7 +353,7 @@ const NavbarClient = ({
 
                     {isLoggedIn ? (
                       <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-sm dark:border-white/10 dark:bg-slate-950/70">
-                        <p className="font-medium text-foreground">{userLabel ?? "ConsultEdge user"}</p>
+                        <p className="font-medium text-foreground">{userLabel ?? "HireGPT user"}</p>
                         {role ? <p className="text-xs uppercase tracking-wide text-muted-foreground">{role}</p> : null}
                       </div>
                     ) : null}

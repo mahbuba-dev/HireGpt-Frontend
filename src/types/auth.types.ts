@@ -12,7 +12,7 @@ export interface IRegisterResponse {
   token: string; // better-auth.session_token
   accessToken: string; // your JWT
   refreshToken: string; // your JWT
-  client: {
+  candidate: {
     id: string;
     userId: string;
     fullName: string;
@@ -48,17 +48,18 @@ export interface IUserProfile {
   email: string;
   role: string;
 
-  client?: {
+
+  candidate?: {
     id: string;
     fullName: string;
   } | null;
 
-  expert?: {
+  recruiter?: {
     id: string;
     fullName: string;
     title: string;
     experience: number;
-    industry: {
+    jobCategory: {
       id: string;
       name: string;
     } | null;
@@ -78,12 +79,13 @@ export interface IUpdateProfilePayload {
   email?: string;
   image?: string | null;
 
-  // Expert-only fields
+
+  // Recruiter-only fields
   title?: string;
   experience?: number;
-  industryId?: string;
+  jobCategoryId?: string;
 
-  // Client-only fields
+  // Candidate-only fields
   fullName?: string;
 
   // Admin-only fields (if needed)

@@ -1,48 +1,4 @@
-// "use client";
 
-// import { getExperts } from "@/src/app/(commonLayout)/experts/_actions";
-// import { IExpert } from "@/src/types/expert.types";
-// import { useQuery } from "@tanstack/react-query";
-// import { useRouter } from "next/navigation";
-
-
-// const ExpertList = () => {
-//      const router = useRouter();
-//  const { data, isLoading } = useQuery({
-//     queryKey: ["experts"],
-//     queryFn: () => getExperts(),
-//   });
-
-//   console.log("Experts:", data?.data); // <-- correct
-
-//   if (isLoading) return <p>Loading...</p>;
-
-//   return (
-//     <div>
-//       <h1 className="text-2xl font-bold">Experts List</h1>
-
-//       <div className="mt-4 space-y-4">
-//         {data?.data?.map((expert:IExpert) => (
-//           <div key={expert.id} className="p-4 border rounded-lg">
-//             <h2 className="text-lg font-semibold">{expert.fullName}</h2>
-//             <p className="text-gray-600">{expert.title}</p>
-//             <p className="text-sm">{expert.industry?.name}</p>
-//             <button
-//   onClick={() => router.push(`/experts/${expert.id}`)}
-//   className="mt-3 rounded-md bg-[#5624d0] text-white px-3 py-1.5 text-sm font-semibold hover:bg-[#3b1a99] transition"
-// >
-//   View Details
-// </button>
-
-//           </div>
-          
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ExpertList;
 
 
 
@@ -58,143 +14,133 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAllIndustries } from "@/src/services/industry.services";
-import { getRecruiters } from "@/src/services/recruiter.services";
+import { getAllJobCategories } from "@/src/services/jobCategory.services";
+import { getAllRecruiters } from "@/src/services/recruiter.service";
 import { aiChatOpenAIFallback } from "@/src/services/ai.service";
-import {
-  trackCategoryClick,
-  trackIndustryExplore,
-} from "@/src/lib/aiPersonalization";
-import { IExpert } from "@/src/types/expert.types";
-import { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
+import { trackCategoryClick } from "@/src/lib/aiPersonalization";
+import { IRecruiter } from "@/src/types/recruiter.types";
+import { IJobCategory, IJobCategoryListResponse } from "@/src/types/jobCategory.types";
 import { cn } from "@/src/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, Users } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ExpertCard from "./JobCard";
+import RecruiterCard from "./RecruiterCard";
 import DataTableSearch, {
   type SearchSuggestion,
 } from "../shared/Table/DataTableSearch";
 
 type RangeField = "experience" | "price";
-type RangePreset = {
-  label: string;
-  gte?: string;
-  lte?: string;
-};
+  const displayedRecruiters = useMemo(() => {
+    const minExperience = parseOptionalNumber(
+      currentSearchParams.get("experience[gte]")
+    );
+    const maxExperience = parseOptionalNumber(
+      currentSearchParams.get("experience[lte]")
+    );
+    const minPrice = parseOptionalNumber(currentSearchParams.get("price[gte]"));
+    const maxPrice = parseOptionalNumber(currentSearchParams.get("price[lte]"));
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const [sortBy, sortOrder] = activeSortValue.split(":") as [string, "asc" | "desc"];
 
-const sortOptions = [
-  { label: "Newest first", value: "createdAt:desc" },
-  { label: "Most experience", value: "experience:desc" },
-  { label: "Lowest price", value: "price:asc" },
-  { label: "Highest price", value: "price:desc" },
-];
-
-const experiencePresets: RangePreset[] = [
-  { label: "0-2 yrs", gte: "0", lte: "2" },
-  { label: "3-5 yrs", gte: "3", lte: "5" },
-  { label: "6-10 yrs", gte: "6", lte: "10" },
-  { label: "10+ yrs", gte: "10" },
-];
-
-const pricePresets: RangePreset[] = [
-  { label: "Budget", gte: "0", lte: "100" },
-  { label: "Standard", gte: "101", lte: "300" },
-  { label: "Premium", gte: "301" },
-];
-
-const parseOptionalNumber = (value: string | null) => {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
-const getSortableTimestamp = (expert: IExpert) => {
-  const createdAt = Date.parse(expert.createdAt ?? "");
-
-  if (Number.isFinite(createdAt)) {
-    return createdAt;
-  }
-
-  const updatedAt = Date.parse(expert.updatedAt ?? "");
-
-  return Number.isFinite(updatedAt) ? updatedAt : 0;
-};
-
-const isSeededExpert = (expert: IExpert) => {
-  if (typeof expert.isSeeded === "boolean") {
-    return expert.isSeeded;
-  }
-
-  // Backward-compatible fallback for old payloads before seeded flag rollout.
-  const email = (expert.email ?? expert.user?.email ?? "").toLowerCase();
-  return email.endsWith("@consultedge.test");
-};
-
-const getQuickFilterButtonClass = (isActive: boolean) =>
-  cn(
-    "h-auto min-h-9 rounded-full border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 hover:-translate-y-0.5 sm:px-4 sm:text-sm",
-    isActive
-      ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600 dark:border-blue-500 dark:bg-blue-500"
-      : "border-blue-200 bg-white/80 text-blue-700 hover:border-blue-300 hover:bg-blue-50 dark:border-white/15 dark:bg-slate-900/85 dark:text-blue-200 dark:hover:border-blue-400/50 dark:hover:bg-slate-800/90",
-  );
-
-const buildAISuggestions = (
-  value: string,
-  experts: IExpert[],
-  industries: IIndustry[],
-): SearchSuggestion[] => {
-  const trimmed = value.trim().toLowerCase();
-
-  const byName = experts
-    .filter((expert) => {
-      if (!expert.fullName) return false;
-      return trimmed ? expert.fullName.toLowerCase().includes(trimmed) : true;
-    })
-    .slice(0, 3)
-    .map((expert) => ({
-      id: `ai-name-${expert.id}`,
-      label: expert.fullName,
-      value: expert.fullName,
-      kind: "name" as const,
-      helperText: `AI found this expert · ${expert.title || "Consultant"}${expert.industry?.name ? ` · ${expert.industry.name}` : ""}`,
-    }));
-
-  const byTitle = Array.from(
-    new Set(
-      experts
-        .map((expert) => expert.title?.trim())
-        .filter((title): title is string => Boolean(title)),
-    ),
-  )
-    .filter((title) => (trimmed ? title.toLowerCase().includes(trimmed) : true))
-    .slice(0, 2)
+    return [...recruiters]
+      .filter((recruiter) => {
+        if (normalizedSearch) {
+          const searchableText = [
+            recruiter.fullName,
+            recruiter.title,
+            recruiter.bio,
+            recruiter.jobCategory?.name,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          if (!searchableText.includes(normalizedSearch)) {
+            return false;
+          }
+        }
+        if (
+          selectedJobCategoryId !== "all" &&
+          recruiter.jobCategoryId !== selectedJobCategoryId &&
+          recruiter.jobCategory?.id !== selectedJobCategoryId
+        ) {
+          return false;
+        }
+        if (
+          selectedVerification !== "all" &&
+          Boolean(recruiter.isVerified) !== (selectedVerification === "true")
+        ) {
+          return false;
+        }
+        const recruiterExperience = Number(recruiter.experience ?? 0);
+        const recruiterPrice = Number(recruiter.price ?? recruiter.consultationFee ?? 0);
+        if (
+          typeof minExperience === "number" &&
+          recruiterExperience < minExperience
+        ) {
+          return false;
+        }
+        if (
+          typeof maxExperience === "number" &&
+          recruiterExperience > maxExperience
+        ) {
+          return false;
+        }
+        if (typeof minPrice === "number" && recruiterPrice < minPrice) {
+          return false;
+        }
+        if (typeof maxPrice === "number" && recruiterPrice > maxPrice) {
+          return false;
+        }
+        return true;
+      })
+      .sort((leftRecruiter, rightRecruiter) => {
+        if (sortBy === "createdAt") {
+          const seededDelta = Number(leftRecruiter.isSeeded) - Number(rightRecruiter.isSeeded);
+          if (seededDelta !== 0) {
+            return seededDelta;
+          }
+        }
+        let comparison = 0;
+        switch (sortBy) {
+          case "experience":
+            comparison = Number(leftRecruiter.experience ?? 0) - Number(rightRecruiter.experience ?? 0);
+            break;
+          case "price":
+            comparison = Number(leftRecruiter.price ?? leftRecruiter.consultationFee ?? 0) - Number(rightRecruiter.price ?? rightRecruiter.consultationFee ?? 0);
+            break;
+          case "fullName":
+            comparison = leftRecruiter.fullName.localeCompare(rightRecruiter.fullName);
+            break;
+          default:
+            comparison = getSortableTimestamp(leftRecruiter) - getSortableTimestamp(rightRecruiter);
+        }
+        return sortOrder === "asc" ? comparison : -comparison;
+      });
+  }, [activeSortValue, currentSearchParams, recruiters, searchTerm, selectedJobCategoryId, selectedVerification]);
     .map((title) => ({
       id: `ai-title-${title.toLowerCase().replace(/\s+/g, "-")}`,
       label: title,
       value: title,
       kind: "title" as const,
-      helperText: "AI suggestion based on recurring expert titles",
+      helperText: "AI suggestion based on recurring recruiter titles",
     }));
 
-  const byIndustry = industries
-    .filter((industry) =>
-      trimmed ? industry.name.toLowerCase().includes(trimmed) : true,
+  const byJobCategory = jobCategories
+    .filter((jobCategory) =>
+      trimmed ? jobCategory.name.toLowerCase().includes(trimmed) : true,
     )
     .slice(0, 2)
-    .map((industry) => ({
-      id: `ai-industry-${industry.id}`,
-      label: industry.name,
-      value: industry.name,
-      kind: "industry" as const,
-      helperText: "AI suggestion to explore this industry cluster",
+    .map((jobCategory) => ({
+      id: `ai-jobCategory-${jobCategory.id}`,
+      label: jobCategory.name,
+      value: jobCategory.name,
+      kind: "jobCategory" as const,
+      helperText: "AI suggestion to explore this job category",
     }));
 
-  return [...byName, ...byTitle, ...byIndustry].slice(0, 6);
+  // Ensure kind matches SearchSuggestionKind type
+  return [...byName, ...byTitle, ...byJobCategory.map((s) => ({ ...s, kind: "title" as const }))].slice(0, 6);
 };
 
 export default function ExpertsPageClient() {
@@ -256,27 +202,47 @@ export default function ExpertsPageClient() {
     currentSearchParams.get("price[gte]") || currentSearchParams.get("price[lte]"),
   );
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["experts", effectiveQueryString],
-    queryFn: () => getExperts(effectiveQueryString),
+  const { data: recruiterData, isLoading, isError } = useQuery({
+    queryKey: ["recruiters", effectiveQueryString],
+    queryFn: () => getAllRecruiters({ ...Object.fromEntries(new URLSearchParams(effectiveQueryString)) }),
     staleTime: 60 * 1000,
   });
 
-  const { data: industries = [] } = useQuery<
-    IIndustryListResponse,
-    Error,
-    IIndustry[]
-  >({
-    queryKey: ["industries", "experts-filter-options"],
-    queryFn: () => getAllIndustries({ page: 1, limit: 100 }),
-    select: (response) =>
-      Array.isArray(response?.data) ? response.data : [],
+  const { data: jobCategories = [] } = useQuery<IJobCategoryListResponse, Error, IJobCategory[]>({
+    queryKey: ["jobCategories", "recruiters-filter-options"],
+    queryFn: () => getAllJobCategories(),
+    select: (response) => Array.isArray(response?.data) ? response.data : [],
     staleTime: 5 * 60 * 1000,
   });
 
-  const experts = useMemo<IExpert[]>(() => (Array.isArray(data?.data) ? data.data : []), [data]);
-  const meta = data?.meta;
-  const selectedIndustryId = currentSearchParams.get("industryId") ?? "all";
+  // Accept both Recruiter and IRecruiter for now
+  // Normalize recruiter data to IRecruiter shape for UI compatibility
+  const recruiters: IRecruiter[] = useMemo(() => {
+    if (!Array.isArray(recruiterData?.data)) return [];
+    return recruiterData.data.map((r: any) => ({
+      id: r.id,
+      fullName: r.fullName,
+      email: r.email,
+      phone: r.phone ?? "",
+      title: r.title ?? r.designation ?? "",
+      bio: r.bio ?? "",
+      experience: r.experience ?? 0,
+      price: r.price ?? r.hiringBudget ?? undefined,
+      consultationFee: r.consultationFee ?? undefined,
+      isVerified: r.isVerified ?? r.verified ?? false,
+      isSeeded: r.isSeeded ?? false,
+      profilePhoto: r.profilePhoto ?? null,
+      resumeUrl: r.resumeUrl ?? null,
+      jobCategoryId: r.jobCategoryId ?? (r.jobCategory?.id ?? ""),
+      jobCategory: r.jobCategory ?? null,
+      userId: r.userId ?? "",
+      user: r.user ?? null,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+  }, [recruiterData]);
+  const meta = recruiterData?.meta;
+  const selectedJobCategoryId = currentSearchParams.get("jobCategoryId") ?? "all";
   const selectedVerification = currentSearchParams.get("isVerified") ?? "all";
 
   useEffect(() => {
@@ -348,104 +314,86 @@ export default function ExpertsPageClient() {
       "asc" | "desc",
     ];
 
-    return [...experts]
-      .filter((expert) => {
+    return [...recruiters]
+      .filter((recruiter) => {
         if (normalizedSearch) {
           const searchableText = [
-            expert.fullName,
-            expert.title,
-            expert.bio,
-            expert.industry?.name,
+            recruiter.fullName,
+            recruiter.title,
+            recruiter.bio,
+            recruiter.jobCategory?.name,
           ]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
-
           if (!searchableText.includes(normalizedSearch)) {
             return false;
           }
         }
-
         if (
-          selectedIndustryId !== "all" &&
-          expert.industryId !== selectedIndustryId &&
-          expert.industry?.id !== selectedIndustryId
+          selectedJobCategoryId !== "all" &&
+          recruiter.jobCategoryId !== selectedJobCategoryId &&
+          recruiter.jobCategory?.id !== selectedJobCategoryId
         ) {
           return false;
         }
-
         if (
           selectedVerification !== "all" &&
-          Boolean(expert.isVerified) !== (selectedVerification === "true")
+          Boolean(recruiter.isVerified) !== (selectedVerification === "true")
         ) {
           return false;
         }
-
-        const expertExperience = Number(expert.experience ?? 0);
-        const expertPrice = Number(expert.price ?? expert.consultationFee ?? 0);
-
+        const recruiterExperience = Number(recruiter.experience ?? 0);
+        const recruiterPrice = Number(recruiter.price ?? recruiter.consultationFee ?? 0);
         if (
           typeof minExperience === "number" &&
-          expertExperience < minExperience
+          recruiterExperience < minExperience
         ) {
           return false;
         }
-
         if (
           typeof maxExperience === "number" &&
-          expertExperience > maxExperience
+          recruiterExperience > maxExperience
         ) {
           return false;
         }
-
-        if (typeof minPrice === "number" && expertPrice < minPrice) {
+        if (typeof minPrice === "number" && recruiterPrice < minPrice) {
           return false;
         }
-
-        if (typeof maxPrice === "number" && expertPrice > maxPrice) {
+        if (typeof maxPrice === "number" && recruiterPrice > maxPrice) {
           return false;
         }
-
         return true;
       })
-      .sort((leftExpert, rightExpert) => {
+      .sort((leftRecruiter, rightRecruiter) => {
         if (sortBy === "createdAt") {
-          const seededDelta = Number(isSeededExpert(leftExpert)) - Number(isSeededExpert(rightExpert));
+          const seededDelta = Number(leftRecruiter.isSeeded) - Number(rightRecruiter.isSeeded);
           if (seededDelta !== 0) {
             return seededDelta;
           }
         }
-
         let comparison = 0;
-
         switch (sortBy) {
           case "experience":
-            comparison =
-              Number(leftExpert.experience ?? 0) -
-              Number(rightExpert.experience ?? 0);
+            comparison = Number(leftRecruiter.experience ?? 0) - Number(rightRecruiter.experience ?? 0);
             break;
           case "price":
-            comparison =
-              Number(leftExpert.price ?? leftExpert.consultationFee ?? 0) -
-              Number(rightExpert.price ?? rightExpert.consultationFee ?? 0);
+            comparison = Number(leftRecruiter.price ?? leftRecruiter.consultationFee ?? 0) - Number(rightRecruiter.price ?? rightRecruiter.consultationFee ?? 0);
             break;
           case "fullName":
-            comparison = leftExpert.fullName.localeCompare(rightExpert.fullName);
+            comparison = leftRecruiter.fullName.localeCompare(rightRecruiter.fullName);
             break;
           default:
-            comparison =
-              getSortableTimestamp(leftExpert) -
-              getSortableTimestamp(rightExpert);
+            comparison = getSortableTimestamp(leftRecruiter) - getSortableTimestamp(rightRecruiter);
         }
-
         return sortOrder === "asc" ? comparison : -comparison;
       });
   }, [
     activeSortValue,
     currentSearchParams,
-    experts,
+    recruiters,
     searchTerm,
-    selectedIndustryId,
+    selectedJobCategoryId,
     selectedVerification,
   ]);
 
@@ -514,15 +462,14 @@ export default function ExpertsPageClient() {
   );
 
   const handleSelectFilterChange = useCallback(
-    (filterId: "industryId" | "isVerified", value: string) => {
-      if (filterId === "industryId") {
+    (filterId: "jobCategoryId" | "isVerified", value: string) => {
+      if (filterId === "jobCategoryId") {
         if (value === "all") {
-          trackCategoryClick("All industries");
+          trackCategoryClick("All job categories");
         } else {
-          const selectedIndustry = industries.find((industry) => industry.id === value);
-          if (selectedIndustry?.name) {
-            trackCategoryClick(selectedIndustry.name);
-            trackIndustryExplore(selectedIndustry.name);
+          const selectedJobCategory = jobCategories.find((cat) => cat.id === value);
+          if (selectedJobCategory?.name) {
+            trackCategoryClick(selectedJobCategory.name);
           }
         }
       }
@@ -541,7 +488,7 @@ export default function ExpertsPageClient() {
         params.set(filterId, value);
       });
     },
-    [industries, updateUrlParams],
+    [jobCategories, updateUrlParams],
   );
 
   const handleQuickRange = useCallback(
@@ -598,11 +545,11 @@ export default function ExpertsPageClient() {
   };
 
   const aiSuggestions = useMemo(() => {
-    const local = buildAISuggestions(liveSearchValue, experts, industries);
+    const local = buildAISuggestions(liveSearchValue, recruiters, jobCategories);
     const openaiIds = new Set(aiSearchSuggestions.map((s) => s.label.toLowerCase()));
     const dedupedLocal = local.filter((s) => !openaiIds.has(s.label.toLowerCase()));
     return [...aiSearchSuggestions, ...dedupedLocal].slice(0, 8);
-  }, [liveSearchValue, experts, industries, aiSearchSuggestions]);
+  }, [liveSearchValue, recruiters, jobCategories, aiSearchSuggestions]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -610,18 +557,18 @@ export default function ExpertsPageClient() {
 
   const totalPages = Math.max(1, Math.ceil(displayedExperts.length / PAGE_SIZE));
 
-  const visibleExperts = useMemo(
-    () => displayedExperts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [displayedExperts, currentPage, PAGE_SIZE],
+  const visibleRecruiters = useMemo(
+    () => displayedRecruiters.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [displayedRecruiters, currentPage, PAGE_SIZE],
   );
 
-  const mobileVisibleExperts = useMemo(
-    () => displayedExperts.slice(0, currentPage * PAGE_SIZE),
-    [displayedExperts, currentPage, PAGE_SIZE],
+  const mobileVisibleRecruiters = useMemo(
+    () => displayedRecruiters.slice(0, currentPage * PAGE_SIZE),
+    [displayedRecruiters, currentPage, PAGE_SIZE],
   );
 
-  const renderedExperts = isMobileViewport ? mobileVisibleExperts : visibleExperts;
-  const canLoadMoreOnMobile = mobileVisibleExperts.length < displayedExperts.length;
+  const renderedRecruiters = isMobileViewport ? mobileVisibleRecruiters : visibleRecruiters;
+  const canLoadMoreOnMobile = mobileVisibleRecruiters.length < displayedRecruiters.length;
 
   useEffect(() => {
     // Prefetch next page card images so transitions feel instant.
@@ -678,19 +625,19 @@ export default function ExpertsPageClient() {
 
           <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
             <Select
-              value={selectedIndustryId}
+              value={selectedJobCategoryId}
               onValueChange={(value) =>
-                handleSelectFilterChange("industryId", value)
+                handleSelectFilterChange("jobCategoryId", value)
               }
             >
               <SelectTrigger className="h-11 w-full min-w-0 rounded-2xl border-blue-200 bg-white/90 text-left text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Industry" />
               </SelectTrigger>
               <SelectContent position="popper" className="min-w-48">
-                <SelectItem value="all">All industries</SelectItem>
-                {industries.map((industry: IIndustry) => (
-                  <SelectItem key={industry.id} value={industry.id}>
-                    {industry.name}
+                <SelectItem value="all">All job categories</SelectItem>
+                {jobCategories.map((jobCategory: IJobCategory) => (
+                  <SelectItem key={jobCategory.id} value={jobCategory.id}>
+                    {jobCategory.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -859,8 +806,8 @@ export default function ExpertsPageClient() {
           </div>
 
           <div className="section-grid md:grid-cols-2 xl:grid-cols-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-            {renderedExperts.map((expert) => (
-              <ExpertCard key={expert.id} expert={expert} />
+            {renderedRecruiters.map((recruiter: IRecruiter) => (
+              <RecruiterCard key={recruiter.id} recruiter={recruiter} />
             ))}
           </div>
 

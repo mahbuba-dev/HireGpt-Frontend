@@ -607,8 +607,7 @@ export default function ConsultationsList({
   // UI
   // -------------------------
   return (
-    <div className="space-y-4">
-
+    <section className="content-container section-spacing space-y-6">
       {/* Redirect banner */}
       {redirectStatus && (
         <PaymentStatusBanner
@@ -634,26 +633,25 @@ export default function ConsultationsList({
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="section-grid xl:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="h-52 animate-pulse bg-muted/40" />
+            <Card key={index} className="h-52 animate-pulse glass-card" />
           ))}
         </div>
       )}
 
       {/* Empty state */}
       {!isLoading && bookingsWithRedirectState.length === 0 && (
-        <Card>
+        <Card className="glass-card">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
             <div>
-              <h3 className="text-lg font-semibold">No consultations yet</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="h3">No consultations yet</h3>
+              <p className="text-base muted">
                 Once you book an expert, your consultation details will appear here.
               </p>
             </div>
-
             <Link href="/experts">
-              <Button className="bg-blue-600 hover:bg-blue-700">Browse experts</Button>
+              <Button className="ai-glow">Browse experts</Button>
             </Link>
           </CardContent>
         </Card>
@@ -661,7 +659,7 @@ export default function ConsultationsList({
 
       {/* Actual list */}
       {!isLoading && bookingsWithRedirectState.length > 0 && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="section-grid xl:grid-cols-2 gap-4">
           {bookingsWithRedirectState.map((booking: IConsultation) => {
             const canPayNow =
               booking.paymentStatus !== "PAID" &&
@@ -699,6 +697,6 @@ export default function ConsultationsList({
           }
         />
       )}
-    </div>
+    </section>
   );
 }

@@ -30,7 +30,7 @@ export default function HomeSearchDropdown({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -6, scale: 0.985 }}
           transition={{ duration: 0.18, ease: [0.2, 0.9, 0.25, 1] }}
-          className="absolute left-0 right-0 top-[calc(100%+10px)] z-70 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.7)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90"
+          className="absolute left-0 right-0 top-[calc(100%+10px)] z-70 overflow-hidden glass-card p-2"
         >
           {suggestions.length ? (
             <ul className="max-h-85 overflow-y-auto pr-0.5">
