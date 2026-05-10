@@ -1,4 +1,4 @@
-import ContactPage from "@/components/modules/Contact/ContactPage";
+import ContactPage from "@/components/modules/Contact/ContactPageForCandidate";
 
 export const metadata = {
   title: "Contact Us | ConsultEdge",

@@ -46,7 +46,7 @@ function salaryHintForCategory(name: string): { min: number; max: number; mid: n
   return SALARY_HINTS.default;
 }
 
-export default function ApplyJobForm() {
+export default function ApplyJobForm({ job, open = true, onClose }: { job: any, open?: boolean, onClose?: () => void }) {
   const [resume, setResume] = useState<File | null>(null);
   const [resumeAnalysis, setResumeAnalysis] = useState("");
   const [isAnalyzingResume, setIsAnalyzingResume] = useState(false);
@@ -120,7 +120,7 @@ export default function ApplyJobForm() {
       email: "",
       phone: "",
       coverLetter: "",
-      jobCategoryId: "",
+      jobCategoryId: job?.jobCategoryId || "",
     },
     onSubmit: ({ value }) => {
       const fullName = value.fullName.trim();
@@ -155,6 +155,9 @@ export default function ApplyJobForm() {
       if (resume) {
         formData.append("resume", resume);
       }
+      // Attach jobId and recruiterId if provided
+      if (job?.id) formData.append("jobId", job.id);
+      if (job?.recruiterId || job?.recruiter?.id) formData.append("recruiterId", job.recruiterId || job.recruiter?.id);
       mutation.mutate(formData);
     },
   });
@@ -308,7 +311,9 @@ export default function ApplyJobForm() {
 
   return (
     <>
-      <Card className="max-w-2xl mx-auto shadow-sm border">
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <Card className="shadow-sm border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Apply for a Job
@@ -609,7 +614,9 @@ export default function ApplyJobForm() {
             </form.Subscribe>
           </form>
         </CardContent>
-      </Card>
+          </Card>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={submitSuccessOpen}
         onOpenChange={(open) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   ArrowLeft,
   BriefcaseBusiness,
@@ -12,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -41,16 +43,22 @@ const formatCurrency = (
   max?: number,
   currency = "USD"
 ) => {
-  if (typeof min === "number" && typeof max === "number") {
+  if (
+    typeof min === "number" &&
+    typeof max === "number"
+  ) {
     return `${new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
-    }).format(min)} - ${new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(max)}`;
+    }).format(min)} - ${new Intl.NumberFormat(
+      "en-US",
+      {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }
+    ).format(max)}`;
   }
 
   if (typeof min === "number") {
@@ -67,10 +75,20 @@ const formatCurrency = (
 export default function JobDetails({
   job,
 }: JobDetailsProps) {
-  const recruiter = job.recruiter ?? null;
+  const recruiter =
+    job &&
+    typeof job === "object" &&
+    "recruiter" in job
+      ? job.recruiter ?? null
+      : null;
+
+  if (!job) {
+    return <div className="text-center py-10 text-lg text-muted-foreground">Loading job details...</div>;
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 md:px-6 lg:py-8">
+      {/* Back Button */}
       <Link
         href="/jobs"
         className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 transition hover:text-blue-900"
@@ -84,33 +102,37 @@ export default function JobDetails({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_0%,transparent_42%)]" />
 
         <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
-          {/* Left */}
+          {/* Left Side */}
           <div className="space-y-5">
+            {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-white/10 text-white hover:bg-white/10">
                 <BriefcaseBusiness className="mr-1 size-3.5" />
-                {job.jobCategory?.name || "General"}
+                {job && job.jobCategory && job.jobCategory.name ? job.jobCategory.name : "General"}
               </Badge>
 
               <Badge className="bg-emerald-500/20 text-white hover:bg-emerald-500/20">
-                {job.type}
+                {job && job.type ? job.type : "N/A"}
               </Badge>
 
               <Badge className="bg-blue-500/20 text-white hover:bg-blue-500/20">
-                {job.experienceLevel}
+                {job && job.experienceLevel ? job.experienceLevel : "N/A"}
               </Badge>
 
-              {job.status === "OPEN" && (
+              {job && job.status === "OPEN" && (
                 <Badge className="bg-green-500/20 text-white hover:bg-green-500/20">
                   Open
                 </Badge>
               )}
             </div>
 
+            {/* Header */}
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
               <Avatar className="size-24 border-4 border-white/20 shadow-2xl sm:size-28 md:size-36">
                 <AvatarFallback className="text-lg font-semibold text-slate-900">
-                  {getInitials(recruiter?.fullName || "RC")}
+                  {getInitials(
+                    recruiter?.fullName || "RC"
+                  )}
                 </AvatarFallback>
               </Avatar>
 
@@ -121,12 +143,15 @@ export default function JobDetails({
 
                 <p className="mt-2 text-sm text-white/85 sm:text-base md:text-lg">
                   {job.location}{" "}
-                  {job.isRemote ? "(Remote)" : ""}
+                  {job.isRemote
+                    ? "(Remote)"
+                    : ""}
                 </p>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
                   <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
-                    {job.jobCategory?.name || "General"}
+                    {job.jobCategory?.name ||
+                      "General"}
                   </Badge>
 
                   <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
@@ -136,31 +161,35 @@ export default function JobDetails({
               </div>
             </div>
 
+            {/* Description */}
             <p className="max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {job.description}
             </p>
 
+            {/* Actions */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:flex md:flex-wrap">
               <Button className="w-full bg-white text-slate-900 hover:bg-white/90 md:w-auto">
                 <CalendarDays className="mr-2 size-4" />
                 Apply for this job
               </Button>
 
-              {recruiter?.email && (
-                {recruiter && recruiter.email ? (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
+              {recruiter?.email ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
+                >
+                  <a
+                    href={`mailto:${recruiter.email}`}
                   >
-                    <a href={`mailto:${recruiter.email}`}>
-                      <Mail className="mr-2 size-4" />
-                      Email recruiter
-                    </a>
-                  </Button>
-                ) : (
-                  <span className="text-sm text-white/60">Recruiter contact unavailable</span>
-                )}
+                    <Mail className="mr-2 size-4" />
+                    Email recruiter
+                  </a>
+                </Button>
+              ) : (
+                <span className="text-sm text-white/60">
+                  Recruiter contact unavailable
+                </span>
               )}
             </div>
           </div>
@@ -193,7 +222,8 @@ export default function JobDetails({
                   </p>
 
                   <p className="mt-1 font-medium text-white">
-                    {job.jobCategory?.name || "General"}
+                    {job.jobCategory?.name ||
+                      "General"}
                   </p>
                 </div>
 
@@ -213,7 +243,8 @@ export default function JobDetails({
                   </p>
 
                   <p className="mt-1 font-medium text-white">
-                    {recruiter?.email || "Not provided"}
+                    {recruiter?.email ||
+                      "Not provided"}
                   </p>
                 </div>
               </div>
@@ -238,7 +269,8 @@ export default function JobDetails({
             </CardTitle>
 
             <CardDescription>
-              Learn more about the role and requirements.
+              Learn more about the role and
+              requirements.
             </CardDescription>
           </CardHeader>
 
@@ -307,7 +339,8 @@ export default function JobDetails({
               </p>
 
               <p className="text-sm text-muted-foreground">
-                {recruiter?.email || "Email not provided"}
+                {recruiter?.email ||
+                  "Email not provided"}
               </p>
             </div>
 

@@ -133,8 +133,9 @@ const NavbarClient = ({
         <div className="relative z-110 flex items-center justify-between gap-2 rounded-xl border border-white/50 bg-white/90 px-2 py-1.5 shadow-md backdrop-blur-lg dark:border-white/10 dark:bg-slate-900/80 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex items-center gap-3">
+         
             <Image
-              src="/logo-hiregpt.png"
+              src="/logo/hiregpt-logo.png"
               alt="HireGPT"
               width={80}
               height={80}

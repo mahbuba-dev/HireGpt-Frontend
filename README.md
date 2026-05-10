@@ -491,4 +491,48 @@ No explicit license is defined in this frontend repository. Add one if the proje
 ## Author
 
 Mahbuba Akter  
-Full-Stack Web Developer  
+Full-Stack Web Developer
+
+---
+
+## Vercel Deployment Guide
+
+### 1. Prerequisites
+- Push your code to GitHub, GitLab, or Bitbucket.
+- Ensure your backend API is publicly accessible (or Vercel can reach it).
+
+### 2. Environment Variables
+Copy `.env.example` to `.env.local` and fill in your real values:
+
+```
+NEXT_PUBLIC_API_BASE_URL=https://your-api-url.com/api/v1
+NEXTAUTH_URL=https://your-vercel-app-url.vercel.app
+# Add any other variables your app needs
+```
+
+### 3. Vercel Project Setup
+1. Go to https://vercel.com and sign in with your GitHub account.
+2. Click **New Project** and import your repository.
+3. Vercel will auto-detect Next.js. Click **Deploy**.
+4. In the Vercel dashboard, go to **Settings > Environment Variables** and add the variables from your `.env.local`.
+5. (Optional) Add a custom domain in the Vercel dashboard.
+
+### 4. vercel.json
+This project includes a `vercel.json` for API rewrites and security headers. Edit it if your API URL changes.
+
+### 5. Build & Start Scripts
+Your `package.json` should include:
+```
+"build": "next build",
+"start": "next start"
+```
+
+### 6. After Deploy
+- Visit your Vercel app URL to verify deployment.
+- Check the Vercel dashboard for build logs and environment settings.
+
+### 7. Troubleshooting
+- If you see API errors, check your API URL and CORS settings.
+- If environment variables are missing, add them in the Vercel dashboard and redeploy.
+
+For more, see the [Vercel Next.js deployment docs](https://vercel.com/docs/frameworks/nextjs).
