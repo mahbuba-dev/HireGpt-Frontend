@@ -76,22 +76,25 @@ export default function ChatWorkspace({
       return rooms;
     }
 
-    if (currentUser.role === "EXPERT") {
+    // If the user is a RECRUITER, show rooms with CANDIDATEs
+    if (currentUser.role === "RECRUITER") {
       return rooms.filter(
         (room) =>
           room.participants.length === 0 ||
-          room.participants.some((participant) => participant.role === "CLIENT"),
+          room.participants.some((participant) => participant.role === "CANDIDATE"),
       );
     }
 
-    if (currentUser.role === "CLIENT") {
+    // If the user is a CANDIDATE, show rooms with RECRUITERs
+    if (currentUser.role === "CANDIDATE") {
       return rooms.filter(
         (room) =>
           room.participants.length === 0 ||
-          room.participants.some((participant) => participant.role === "EXPERT"),
+          room.participants.some((participant) => participant.role === "RECRUITER"),
       );
     }
 
+    // ADMIN or other roles see all rooms
     return rooms;
   }, [currentUser?.role, rooms]);
 
@@ -192,9 +195,7 @@ export default function ChatWorkspace({
     isLoading: isMessagesLoading,
     error: messagesError,
     refetch: refetchMessages,
-    applyOptimisticReaction,
     sendMessage,
-    toggleReaction,
     uploadAttachment,
     isSending,
     isUploading,
@@ -234,51 +235,9 @@ export default function ChatWorkspace({
     }
   };
 
-  const handleToggleReaction = async (messageId: string, emoji: string) => {
-    if (!activeRoomId || !messageId || !emoji || !currentUser?.userId) {
-      return;
-    }
-
-    const targetMessage = messages.find((message) => message.id === messageId);
-    const currentReactionEmoji = targetMessage
-      ? getCurrentUserReactionEmoji(targetMessage, currentUser.userId)
-      : null;
-
-    const rollback = applyOptimisticReaction({ messageId, emoji });
-
-    if (connectionState === "connected") {
-      if (currentReactionEmoji && currentReactionEmoji !== emoji) {
-        emit("toggle_reaction", {
-          roomId: activeRoomId,
-          messageId,
-          emoji: currentReactionEmoji,
-        });
-      }
-
-      emit("toggle_reaction", {
-        roomId: activeRoomId,
-        messageId,
-        emoji,
-      });
-      return;
-    }
-
-    try {
-      if (currentReactionEmoji && currentReactionEmoji !== emoji) {
-        await toggleReaction({ messageId, emoji: currentReactionEmoji });
-      }
-
-      await toggleReaction({ messageId, emoji });
-    } catch (error: any) {
-      rollback();
-
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to update reaction right now.";
-
-      toast.error(message);
-    }
+  // Reaction toggling is not supported in this build (toggleReaction and applyOptimisticReaction are not available)
+  const handleToggleReaction = (_messageId: string, _emoji: string) => {
+    toast.warning("Reactions are currently unavailable in this build.");
   };
 
   const incomingCallerName =

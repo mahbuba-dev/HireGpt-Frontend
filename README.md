@@ -325,7 +325,7 @@ flowchart LR
 This repository is the frontend application. The codebase is organized around reusable modules, route groups, hooks, providers, and service layers.
 
 ```text
-consultedge-frontend/
+HireGpt/
 |- src/
 |  |- app/
 |  |  |- (commonLayout)/

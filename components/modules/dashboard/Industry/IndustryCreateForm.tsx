@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { aiIndustryCreation } from "@/src/services/ai.service";
-import { createIndustry } from "@/src/services/industry.services";
+import { createJobCategory } from "@/src/services/industry.services";
 
 const getErrorMessage = (error: unknown) => {
   if (typeof error === "object" && error !== null) {
@@ -25,7 +25,7 @@ const getErrorMessage = (error: unknown) => {
     return (
       maybeError.response?.data?.message ??
       maybeError.message ??
-      "Failed to create industry"
+      "Failed to create job category"
     );
   }
 
@@ -84,18 +84,18 @@ export default function IndustryCreateForm() {
       if (file) fd.append("file", file);
 
       try {
-        const res = await createIndustry(fd);
+        const res = await createJobCategory(fd);
 
-        if (!res?.success) {
-          toast.error(res?.message || "Failed to create industry", {
+        if (!res?.data?.success) {
+          toast.error(res?.data?.message || "Failed to create job category", {
             description: "Please review the details and try again.",
           });
           return;
         }
-        const industryName = value.name.trim() || "Your new industry";
+        const jobCategoryName = value.name.trim() || "Your new job category";
 
-        toast.success("Industry created successfully", {
-          description: `${industryName} is now ready to manage from the dashboard.`,
+        toast.success("Job category created successfully", {
+          description: `${jobCategoryName} is now ready to manage from the dashboard.`,
         });
 
         form.reset();
@@ -161,7 +161,7 @@ export default function IndustryCreateForm() {
           {(field) => (
             <AppField
               field={field}
-              label="Industry Name"
+              label="Job Category Name"
               placeholder="e.g. Cybersecurity"
             />
           )}
@@ -263,7 +263,7 @@ export default function IndustryCreateForm() {
       <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
         <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
           <ImagePlus className="size-4 text-blue-600 dark:text-cyan-300" />
-          Industry icon
+          Job category icon
         </label>
 
         {previewUrl ? (
@@ -319,7 +319,7 @@ export default function IndustryCreateForm() {
         className="h-11 w-full rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 hover:from-blue-700 hover:to-cyan-600"
       >
         <Sparkles className="mr-2 size-4" />
-        Create industry
+        Create job category
       </AppSubmitButton>
     </form>
   );

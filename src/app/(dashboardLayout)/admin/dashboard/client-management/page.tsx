@@ -1,4 +1,4 @@
-import ClientManageTable from "@/components/modules/Table/ClientManageTable";
+import ClientManageTable from "@/components/modules/Table/CandidateManage";
 
 export default function ClientManagementPage() {
   return (

@@ -105,11 +105,11 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       userId: profile.id,
       role: profile.role as ChatRole,
       name:
-        profile.expert?.fullName ||
-        profile.client?.fullName ||
+        profile.candidate?.fullName ||
+        profile.recruiter?.fullName ||
         profile.admin?.name ||
         profile.name ||
-        "ConsultEdge user",
+        "HireGPT user",
       profilePhoto: null,
     };
   }, [profile]);
@@ -234,7 +234,13 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       const existingMessages =
         queryClient.getQueryData<ChatMessage[]>(["chat-room-messages", message.roomId]) ?? [];
       const isDuplicate = existingMessages.some((entry) => entry.id === message.id);
-      const isOwnMessage = isMessageFromCurrentUser(message, currentUser.userId);
+      const isOwnMessage = isMessageFromCurrentUser(
+        {
+          senderId: message.senderId,
+          sender: message.sender ? { userId: message.sender.userId, id: message.sender.id } : undefined,
+        },
+        currentUser.userId
+      );
       const isActiveRoom = activeRoomId === message.roomId;
 
       queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", message.roomId], (current) =>

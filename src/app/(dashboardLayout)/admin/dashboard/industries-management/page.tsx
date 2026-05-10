@@ -3,14 +3,14 @@ import { Layers, PlusCircle, Sparkles } from "lucide-react";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 
 import IndustryList from "@/components/modules/dashboard/Industry/IndustryList";
-import { getAllIndustries } from "@/src/services/industry.services";
+import { getAllJobCategories } from "@/src/services/industry.services";
 
 export default async function IndustryListPage() {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["industries"],
-    queryFn: getAllIndustries,
+    queryKey: ["job-categories"],
+    queryFn: getAllJobCategories,
   });
 
   return (

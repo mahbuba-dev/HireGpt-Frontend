@@ -93,8 +93,8 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
   const getReviewerName = (testimonial: ITestimonial) => {
     const namedReviewer =
       testimonial.reviewerName ||
-      testimonial.client?.fullName ||
-      testimonial.client?.user?.name;
+      testimonial.candidate?.fullName ||
+      testimonial.candidate?.user?.name;
     if (namedReviewer) return namedReviewer;
 
     // Keep reviewer identity readable even if profile details are partially missing.
@@ -219,7 +219,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
               <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
                 Testimonials
               </Badge>
-              <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-4xl">
+              <h2 className="text-xl font-bold tracking-tight text-white md:text-2xl lg:text-3xl">
                 Stories from teams who moved faster with ConsultEdge
               </h2>
               <p className="text-sm text-slate-200/90 md:text-base">
@@ -270,8 +270,8 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
                     {testimonial.comment || "A positive consultation experience shared by the client."}
                   </p>
 
-                  {testimonial.expert?.fullName ? (
-                    <div className="mt-3 text-xs font-medium text-cyan-100/90">For {testimonial.expert.fullName}</div>
+                  {testimonial.recruiter?.fullName ? (
+                    <div className="mt-3 text-xs font-medium text-cyan-100/90">For {testimonial.recruiter.fullName}</div>
                   ) : null}
                 </article>
               ))}

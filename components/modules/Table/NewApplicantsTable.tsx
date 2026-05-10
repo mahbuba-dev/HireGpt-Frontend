@@ -31,14 +31,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  getNewApplicants,
-  reviewExpertApplicationAction,
-} from "@/src/services/expert.services";
 import type {
-  IExpertApplication,
-  IReviewExpertApplicationPayload,
-} from "@/src/types/expert.types";
+  IRecruiterApplication,
+  RecruiterApplicationStatus,
+} from "@/src/types/recruiter.types";
+import {
+  getApplicantsForJob,
+  updateApplicationStatus,
+} from "@/src/services/jobApplication.service";
+
+type ReviewRecruiterApplicationPayload = {
+  status: RecruiterApplicationStatus;
+  reviewNotes?: string;
+};
 import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
 const formatDate = (value?: string) => {
@@ -51,26 +56,26 @@ const formatCurrency = (value?: number) => {
   return `$${value.toLocaleString()}`;
 };
 
-const columns: ColumnDef<IExpertApplication>[] = [
+const columns: ColumnDef<IRecruiterApplication>[] = [
   {
     accessorKey: "fullName",
     header: "Applicant",
     cell: ({ row }) => {
-      const expert = row.original;
+      const recruiter = row.original;
       return (
         <div className="space-y-1">
-          <p className="font-medium">{expert.fullName}</p>
-          <p className="text-xs text-muted-foreground">{expert.email}</p>
-          <p className="text-xs text-muted-foreground">{expert.title || "No title added"}</p>
+          <p className="font-medium">{recruiter.fullName}</p>
+          <p className="text-xs text-muted-foreground">{recruiter.email}</p>
+          <p className="text-xs text-muted-foreground">{recruiter.title || "No title added"}</p>
         </div>
       );
     },
   },
   {
-    accessorFn: (row) => row.industry?.name ?? "Unassigned",
-    id: "industry",
-    header: "Industry",
-    cell: ({ row }) => row.original.industry?.name ?? "Unassigned",
+    accessorFn: (row) => row.jobCategoryId ?? "Unassigned",
+    id: "jobCategory",
+    header: "Job Category",
+    cell: ({ row }) => row.original.jobCategoryId ?? "Unassigned",
   },
   {
     accessorKey: "experience",
@@ -107,8 +112,8 @@ const columns: ColumnDef<IExpertApplication>[] = [
 
 const filterConfigs: DataTableFilterConfig[] = [
   {
-    id: "industry",
-    label: "Industry",
+    id: "jobCategory",
+    label: "Job Category",
     type: "single-select",
     options: [],
   },
@@ -131,10 +136,10 @@ export default function NewApplicantsTable() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
-  const [applicationTarget, setApplicationTarget] = useState<IExpertApplication | null>(null);
+  const [applicationTarget, setApplicationTarget] = useState<IRecruiterApplication | null>(null);
   const [decisionTarget, setDecisionTarget] = useState<{
-    application: IExpertApplication;
-    status: IReviewExpertApplicationPayload["status"];
+    application: IRecruiterApplication;
+    status: ReviewRecruiterApplicationPayload["status"];
   } | null>(null);
   // Track applications the admin already acted on so the row UI updates the
   // moment they click Approve / Reject — even before the network round-trip.
@@ -150,19 +155,15 @@ export default function NewApplicantsTable() {
     queryParams,
   } = useServerDataTable({ defaultPageSize: 10 });
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ["new-applicants-table", queryParams, searchTerm],
-    queryFn: () =>
-      getNewApplicants({
-        page: queryParams.page,
-        limit: queryParams.limit,
-        sortBy: queryParams.sortBy,
-        sortOrder: queryParams.sortOrder,
-        searchTerm: searchTerm.trim() || undefined,
-      }),
-    staleTime: 60 * 1000,
-    placeholderData: (prev) => prev,
-  });
+  // TODO: Replace with correct API for fetching all new recruiter applications
+  const { data, isLoading, isFetching, isError, error, refetch } = {
+    data: { data: [] },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: () => Promise.resolve(),
+  };
 
   const verifyMutation = useMutation({
     mutationFn: ({
@@ -170,10 +171,8 @@ export default function NewApplicantsTable() {
       payload,
     }: {
       applicationId: string;
-      payload: IReviewExpertApplicationPayload;
-    }) => reviewExpertApplicationAction(applicationId, payload),
-    // Optimistic: immediately reflect the decision in the table + toast, so the
-    // admin doesn't sit through a 30-second cold start spinner.
+      payload: ReviewRecruiterApplicationPayload;
+    }) => updateApplicationStatus({ applicationId, status: payload.status }),
     onMutate: ({ applicationId, payload }) => {
       const status = payload.status as "APPROVED" | "REJECTED";
       setOptimisticDecisions((prev) => ({ ...prev, [applicationId]: status }));
@@ -185,21 +184,15 @@ export default function NewApplicantsTable() {
       return { applicationId };
     },
     onSuccess: () => {
-      // Refresh the pending list + the sidebar badge in the background.
       void queryClient.invalidateQueries({ queryKey: ["new-applicants-table"] });
       void queryClient.invalidateQueries({ queryKey: ["pending-applicants-count"] });
     },
     onError: (mutationError, variables, context) => {
       const message = getErrorMessage(mutationError, "Failed to review application.");
-      // The very common race when the optimistic toast already fired AND the
-      // server confirms the previous click — treat as success and keep the row
-      // in its decided state.
       if (/already reviewed|already approved|already rejected/i.test(message)) {
         void queryClient.invalidateQueries({ queryKey: ["new-applicants-table"] });
         return;
       }
-      // Real failure — roll back the optimistic state and surface a single
-      // error toast (replaces the optimistic success).
       if (context?.applicationId) {
         setOptimisticDecisions((prev) => {
           const next = { ...prev };
@@ -212,11 +205,11 @@ export default function NewApplicantsTable() {
     },
   });
 
-  const applicants = useMemo<IExpertApplication[]>(() => {
+  const applicants = useMemo<IRecruiterApplication[]>(() => {
     return Array.isArray(data?.data) ? data.data : [];
   }, [data]);
 
-  const decoratedApplicants = useMemo<IExpertApplication[]>(
+  const decoratedApplicants = useMemo<IRecruiterApplication[]>(
     () =>
       applicants.map((applicant) => {
         const decision = optimisticDecisions[applicant.id];
@@ -225,9 +218,9 @@ export default function NewApplicantsTable() {
     [applicants, optimisticDecisions],
   );
 
-  const industryOptions = useMemo(
+  const jobCategoryOptions = useMemo(
     () =>
-      [...new Set(applicants.map((expert) => expert.industry?.name).filter(Boolean))]
+      [...new Set(applicants.map((expert) => expert.jobCategoryId).filter(Boolean))]
         .sort()
         .map((name) => ({ label: name as string, value: name as string })),
     [applicants],
@@ -237,26 +230,26 @@ export default function NewApplicantsTable() {
     () => [
       {
         ...filterConfigs[0],
-        options: industryOptions,
+        options: jobCategoryOptions,
       },
     ],
-    [industryOptions],
+    [jobCategoryOptions],
   );
 
   const filteredApplicants = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    const industryFilter =
-      typeof filterValues.industry === "string" ? filterValues.industry : undefined;
+    const jobCategoryFilter =
+      typeof filterValues.jobCategory === "string" ? filterValues.jobCategory : undefined;
 
     return decoratedApplicants.filter((expert) => {
       const matchesSearch =
         !normalizedSearch ||
-        [expert.fullName, expert.email, expert.title, expert.industry?.name]
+        [expert.fullName, expert.email, expert.title, expert.jobCategoryId]
           .filter(Boolean)
           .some((value) => value!.toLowerCase().includes(normalizedSearch));
 
-      const matchesIndustry = !industryFilter || expert.industry?.name === industryFilter;
-      return matchesSearch && matchesIndustry;
+      const matchesJobCategory = !jobCategoryFilter || expert.jobCategoryId === jobCategoryFilter;
+      return matchesSearch && matchesJobCategory;
     });
   }, [decoratedApplicants, filterValues, searchTerm]);
 
@@ -288,8 +281,8 @@ export default function NewApplicantsTable() {
             <Alert variant="destructive">
               <AlertTitle>Could not load applicants</AlertTitle>
               <AlertDescription>
-                {error instanceof Error
-                  ? error.message
+                {typeof error === "object" && error && "message" in error
+                  ? (error as any).message
                   : "The applicants list is unavailable right now."}
               </AlertDescription>
             </Alert>
@@ -298,7 +291,7 @@ export default function NewApplicantsTable() {
           <Table
             data={filteredApplicants}
             columns={columns}
-            meta={data?.meta}
+            // meta prop removed for placeholder data
             isLoading={isLoading || isFetching}
             emptyMessage="No pending applicants found."
             pagination={{
@@ -393,8 +386,8 @@ export default function NewApplicantsTable() {
                   <p className="mt-0.5">{applicationTarget.phone || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Industry</p>
-                  <p className="mt-0.5">{applicationTarget.industry?.name || "—"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Job Category</p>
+                  <p className="mt-0.5">{applicationTarget.jobCategoryId || "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Title</p>

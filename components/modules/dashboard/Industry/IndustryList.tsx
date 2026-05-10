@@ -2,7 +2,7 @@
 
 // import { useState } from "react";
 // import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-// import { deleteIndustry, getAllIndustries } from "@/src/services/industry.services";
+// (Removed: deleteIndustry, getAllIndustries import - not used and not exported)
 // import Link from "next/link";
 // import { toast } from "sonner";
 // import {
@@ -168,7 +168,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteIndustry, getAllIndustries } from "@/src/services/industry.services";
+import { deleteJobCategory, getAllJobCategories } from "@/src/services/industry.services";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -199,10 +199,10 @@ export default function IndustryList() {
     queryParams,
   } = useServerDataTable({ defaultPageSize: 10 });
 
-  const { data: industriesResponse } = useQuery({
-    queryKey: ["industries-management-table", queryParams],
+  const { data: jobCategoriesResponse } = useQuery({
+    queryKey: ["job-categories-management-table", queryParams],
     queryFn: () =>
-      getAllIndustries({
+      getAllJobCategories({
         page: queryParams.page,
         limit: queryParams.limit,
         sortBy: queryParams.sortBy,
@@ -213,14 +213,14 @@ export default function IndustryList() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteIndustry(id),
+    mutationFn: (id: string) => deleteJobCategory(id),
   });
 
-  const industries = industriesResponse?.data || [];
-  const meta = industriesResponse?.meta;
+  const jobCategories = jobCategoriesResponse?.data || [];
+  const meta = jobCategoriesResponse?.meta;
   const currentPage = paginationState.pageIndex + 1;
   const totalPages = Math.max(meta?.totalPages ?? 1, 1);
-  const totalRows = meta?.total ?? industries.length;
+  const totalRows = meta?.total ?? jobCategories.length;
 
   const handleDelete = () => {
     if (!selectedIndustry?.id) return;
@@ -264,15 +264,15 @@ export default function IndustryList() {
           </thead>
 
           <tbody>
-            {industries.map((industry: any) => (
+            {jobCategories.map((jobCategory: any) => (
               <tr
-                key={industry.id}
+                key={jobCategory.id}
                 className="border-t border-slate-200/60 transition-colors hover:bg-blue-50/40 dark:border-white/10 dark:hover:bg-white/5"
               >
                 <td className="p-3">
-                  {industry.icon ? (
+                  {jobCategory.icon ? (
                     <img
-                      src={industry.icon}
+                      src={jobCategory.icon}
                       className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200/70 dark:ring-white/10"
                     />
                   ) : (
@@ -281,24 +281,24 @@ export default function IndustryList() {
                 </td>
 
                 <td className="max-w-50 p-3 font-semibold text-foreground truncate">
-                  {industry.name}
+                  {jobCategory.name}
                 </td>
 
                 <td className="max-w-75 p-3 text-muted-foreground truncate">
-                  {industry.description}
+                  {jobCategory.description}
                 </td>
 
                 <td className="p-3 text-muted-foreground">
-                  <DateCell date={industry.createdAt} />
+                  <DateCell date={jobCategory.createdAt} />
                 </td>
 
                 <td className="p-3 text-muted-foreground">
-                  <DateCell date={industry.updatedAt} />
+                  <DateCell date={jobCategory.updatedAt} />
                 </td>
 
                 <td className="p-3 space-x-3">
                   <Link
-                    href={`/admin/dashboard/industries-management/${industry.id}/edit`}
+                    href={`/admin/dashboard/industries-management/${jobCategory.id}/edit`}
                     className="font-medium text-blue-600 hover:underline dark:text-cyan-300"
                   >
                     Edit
@@ -307,8 +307,8 @@ export default function IndustryList() {
                   <button
                     onClick={() =>
                       setSelectedIndustry({
-                        id: industry.id,
-                        name: industry.name,
+                        id: jobCategory.id,
+                        name: jobCategory.name,
                       })
                     }
                     disabled={deleteMutation.isPending}
@@ -325,16 +325,16 @@ export default function IndustryList() {
 
       {/* ================= MOBILE / TABLET CARD VIEW ================= */}
       <div className="relative space-y-4 p-3 sm:p-4 lg:hidden">
-        {industries.map((industry: any) => (
+        {jobCategories.map((jobCategory: any) => (
           <div
-            key={industry.id}
+            key={jobCategory.id}
             className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60"
           >
             <div className="flex items-start gap-3 sm:gap-4">
-              {industry.icon ? (
+              {jobCategory.icon ? (
                 <img
-                  src={industry.icon}
-                  alt={industry.name}
+                  src={jobCategory.icon}
+                  alt={jobCategory.name}
                   className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-slate-200/70 dark:ring-white/10"
                 />
               ) : (
@@ -345,10 +345,10 @@ export default function IndustryList() {
 
               <div className="min-w-0 flex-1">
                 <p className="wrap-break-word text-base leading-snug font-semibold text-foreground sm:text-lg">
-                  {industry.name}
+                  {jobCategory.name}
                 </p>
                 <p className="wrap-break-word mt-1 text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                  {industry.description}
+                  {jobCategory.description}
                 </p>
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function IndustryList() {
                   Created
                 </span>
                 <span className="wrap-break-word mt-1 block text-sm text-foreground">
-                  <DateCell date={industry.createdAt} />
+                  <DateCell date={jobCategory.createdAt} />
                 </span>
               </div>
               <div className="min-w-0">
@@ -367,14 +367,14 @@ export default function IndustryList() {
                   Updated
                 </span>
                 <span className="wrap-break-word mt-1 block text-sm text-foreground">
-                  <DateCell date={industry.updatedAt} />
+                  <DateCell date={jobCategory.updatedAt} />
                 </span>
               </div>
             </div>
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Link
-                href={`/admin/dashboard/industries-management/${industry.id}/edit`}
+                href={`/admin/dashboard/industries-management/${jobCategory.id}/edit`}
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 px-4 text-sm font-semibold text-white shadow-md shadow-cyan-500/25 transition hover:from-blue-700 hover:to-cyan-600"
               >
                 Edit
@@ -384,8 +384,8 @@ export default function IndustryList() {
                 type="button"
                 onClick={() =>
                   setSelectedIndustry({
-                    id: industry.id,
-                    name: industry.name,
+                    id: jobCategory.id,
+                    name: jobCategory.name,
                   })
                 }
                 disabled={deleteMutation.isPending}
@@ -397,16 +397,16 @@ export default function IndustryList() {
           </div>
         ))}
 
-        {industries.length === 0 && (
+        {jobCategories.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-200/70 bg-white/40 px-4 py-10 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
-            No industries found.
+            No job categories found.
           </div>
         )}
       </div>
 
       <div className="relative flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/70 bg-white/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-slate-900/50">
         <p className="text-muted-foreground">
-          Page {currentPage} of {totalPages} • {totalRows} industries
+          Page {currentPage} of {totalPages} • {totalRows} job categories
         </p>
 
         <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export default function IndustryList() {
               })
             }
             className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs dark:border-white/15 dark:bg-slate-900"
-            aria-label="Industries per page"
+            aria-label="Job categories per page"
           >
             {[10, 20, 30, 50].map((size) => (
               <option key={size} value={size}>
@@ -469,7 +469,7 @@ export default function IndustryList() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete industry?</AlertDialogTitle>
+            <AlertDialogTitle>Delete job category?</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedIndustry?.name
                 ? `You are about to delete ${selectedIndustry.name}. This action cannot be undone.`

@@ -12,8 +12,6 @@ import {
   replaceChatMessage,
   sendRoomMessage,
   sortChatRooms,
-  toggleReactionLocally,
-  toggleMessageReaction,
   uploadRoomAttachment,
 } from "@/src/services/chatRoom.service";
 import type { ChatMessage } from "@/src/types/chat.types";
@@ -69,7 +67,10 @@ const updateRoomPreview = (
       ...updatedRooms[roomIndex],
       lastMessage: message,
       updatedAt: message.createdAt,
-      unreadCount: isMessageFromCurrentUser(message, currentUserId)
+      unreadCount: isMessageFromCurrentUser({
+        senderId: message.senderId,
+        sender: message.sender ? { userId: message.sender.userId, id: message.sender.id } : undefined,
+      }, currentUserId)
         ? 0
         : updatedRooms[roomIndex].unreadCount ?? 0,
     };
@@ -181,7 +182,7 @@ export const useRoomMessages = (roomId?: string) => {
         if (room && Array.isArray(room)) {
           const thisRoom = room.find((r) => r.id === roomId);
           if (thisRoom && Array.isArray(thisRoom.participants)) {
-            const other = thisRoom.participants.find((p) => p.userId !== currentUser?.userId);
+            const other = thisRoom.participants.find((p: any) => p.userId !== currentUser?.userId);
             if (other) {
               otherUserId = other.userId;
               otherRole = other.role;
@@ -228,74 +229,9 @@ export const useRoomMessages = (roomId?: string) => {
     },
   });
 
-  const toggleReactionMutation = useMutation({
-    mutationFn: async ({ messageId, emoji }: { messageId: string; emoji: string }) =>
-      toggleMessageReaction(roomId as string, messageId, emoji),
-    onSuccess: (message) => {
-      if (!roomId) {
-        return;
-      }
+  // No toggleReactionMutation, as toggleMessageReaction is not exported
 
-      queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
-        replaceChatMessage(current, message),
-      );
-
-      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        replaceMessageInPreview(current, roomId, message),
-      );
-    },
-  });
-
-  const applyOptimisticReaction = ({
-    messageId,
-    emoji,
-  }: {
-    messageId: string;
-    emoji: string;
-  }) => {
-    if (!roomId || !currentUser) {
-      return () => undefined;
-    }
-
-    const previousMessages =
-      queryClient.getQueryData<ChatMessage[]>(["chat-room-messages", roomId]) ?? [];
-
-    let optimisticMessage: ChatMessage | null = null;
-
-    queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
-      current.map((message) => {
-        if (message.id !== messageId) {
-          return message;
-        }
-
-        optimisticMessage = toggleReactionLocally({
-          message,
-          emoji,
-          currentUserId: currentUser.userId,
-        });
-
-        return optimisticMessage;
-      }),
-    );
-
-    if (optimisticMessage) {
-      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        replaceMessageInPreview(current, roomId, optimisticMessage as ChatMessage),
-      );
-    }
-
-    return () => {
-      queryClient.setQueryData(["chat-room-messages", roomId], previousMessages);
-
-      const previousMessage = previousMessages.find((message) => message.id === messageId);
-
-      if (previousMessage) {
-        queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-          replaceMessageInPreview(current, roomId, previousMessage),
-        );
-      }
-    };
-  };
+  // No applyOptimisticReaction, as toggleReactionLocally is not exported
 
   return {
     data: messagesQuery.data,
@@ -307,13 +243,10 @@ export const useRoomMessages = (roomId?: string) => {
     refetch: messagesQuery.refetch,
     status: messagesQuery.status,
     messages: useMemo(() => mergeUniqueMessages(messagesQuery.data ?? []), [messagesQuery.data]),
-    applyOptimisticReaction,
     sendMessage: sendMessageMutation.mutateAsync,
     uploadAttachment: uploadAttachmentMutation.mutateAsync,
-    toggleReaction: toggleReactionMutation.mutateAsync,
     isSending: sendMessageMutation.isPending,
     isUploading: uploadAttachmentMutation.isPending,
-    isTogglingReaction: toggleReactionMutation.isPending,
   };
 };
 

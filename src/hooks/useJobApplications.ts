@@ -22,7 +22,13 @@ export function useSavedJobs() {
 export function useApplicantsForJob(jobId: string) {
   return useQuery<JobApplication[], Error>({
     queryKey: ['applicants', jobId],
-    queryFn: () => jobAppService.getApplicantsForJob(jobId).then(res => res.data),
+    queryFn: async () => {
+      const res = await jobAppService.getApplicantsForJob(jobId);
+      // If response is { data: JobApplication[] }, extract .data, else return as is
+      if (res && Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res)) return res;
+      return [];
+    },
     enabled: !!jobId,
   });
 }
@@ -33,8 +39,8 @@ export function useApplyToJob() {
   return useMutation({
     mutationFn: jobAppService.applyToJob,
     onSuccess: () => {
-      queryClient.invalidateQueries(['appliedJobs']);
-      queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries({ queryKey: ['appliedJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
   });
 }
@@ -45,8 +51,8 @@ export function useUpdateApplicationStatus() {
   return useMutation({
     mutationFn: jobAppService.updateApplicationStatus,
     onSuccess: () => {
-      queryClient.invalidateQueries(['applicants']);
-      queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries({ queryKey: ['applicants'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
   });
 }

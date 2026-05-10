@@ -6,10 +6,11 @@ interface LoginParams {
   searchParams: Promise<{ redirect?: string; passwordReset?: string }>;
 }
 
+
 const highlights = [
-  { icon: ShieldCheck, title: "Verified experts", desc: "Every profile is reviewed and credentialed." },
-  { icon: Sparkles, title: "Smart consultations", desc: "Find the right specialist in minutes." },
-  { icon: Zap, title: "Fast booking", desc: "Secure payment and instant confirmations." },
+  { icon: ShieldCheck, title: "Verified jobs & recruiters", desc: "Every job and recruiter is reviewed for authenticity." },
+  { icon: Sparkles, title: "AI-powered matching", desc: "Get smart job and talent recommendations instantly." },
+  { icon: Zap, title: "Fast, secure access", desc: "Your data is protected. Log in and get started in seconds." },
 ];
 
 const LoginPage = async ({ searchParams }: LoginParams) => {
@@ -19,11 +20,12 @@ const LoginPage = async ({ searchParams }: LoginParams) => {
 
   return (
     <AuthShell
-      eyebrow="Welcome back to ConsultEdge"
-      titleLead="Sign in to keep moving"
-      titleAccent="with the right expert."
-      description="Pick up where you left off — manage bookings, message experts, and track every consultation from one premium dashboard."
+      eyebrow="Welcome back to HireGPT"
+      titleLead="Sign in to your career"
+      titleAccent="with AI-powered hiring."
+      description="Access your dashboard, manage applications, and connect with top companies and talent—all in one place."
       highlights={highlights}
+      colorMode="orange"
     >
       <LoginForm redirectPath={redirectPath} passwordReset={passwordReset} />
     </AuthShell>

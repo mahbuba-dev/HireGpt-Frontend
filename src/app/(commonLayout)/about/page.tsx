@@ -176,7 +176,7 @@ export default function AboutPage() {
               Our story
             </Badge>
 
-            <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
+            <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl lg:text-4xl">
               Expert advice,{" "}
               <span className="bg-linear-to-r from-cyan-300 via-sky-300 to-blue-300 bg-clip-text text-transparent">
                 intelligently delivered

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { postTestimonial } from "@/src/services/job.services";
 
-export default function TestimonialForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function TestimonialForm({ onSuccess, user, setOpen }: { onSuccess?: () => void; user?: any; setOpen?: (open: boolean) => void }) {
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
   const [meta, setMeta] = useState("");

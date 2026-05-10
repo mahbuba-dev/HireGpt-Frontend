@@ -16,7 +16,7 @@ export const commonProtectedRoutes : RouteConfig = {
         "/my-profile",
         "/change-password",
         "/apply-recruiter",
-        "/recruiters/apply-recruiter",
+        "/reqruiters/apply-recruiter",
     ],
     pattern : []
 }

@@ -151,7 +151,8 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
           </div>
         </div>
       </div>
-    </div>
+
+  </aside>
   );
 }
 

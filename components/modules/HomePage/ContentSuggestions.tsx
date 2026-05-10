@@ -121,7 +121,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
     queryFn: () =>
       aiSummary({
         topic: industryName,
-        industryIds: focusIndustry ? [focusIndustry.id] : [],
+        // industryIds: focusIndustry ? [focusIndustry.id] : [],
         kind: "content-suggestions",
         source: "homepage",
       }),
@@ -156,7 +156,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
     // Heuristic fallback: deterministic from industry name for SSR/CSR consistency.
     const baseHash = industryName
       .split("")
-      .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+      .reduce((sum: number, ch: string) => sum + ch.charCodeAt(0), 0);
     const offset = baseHash % TEMPLATES.length;
     return Array.from({ length: 4 }, (_, i) => {
       const t = TEMPLATES[(offset + i) % TEMPLATES.length];

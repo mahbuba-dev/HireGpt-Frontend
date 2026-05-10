@@ -86,7 +86,7 @@ export default async function InsightDetailPage({ params, searchParams }: Insigh
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 md:text-3xl lg:text-4xl">
             {headline}
           </h1>
 

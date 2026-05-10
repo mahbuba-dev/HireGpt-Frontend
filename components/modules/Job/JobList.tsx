@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { useJobs } from '@/src/hooks/useJobs';
 import type { Job } from '@/src/types/job.types';

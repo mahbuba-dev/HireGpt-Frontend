@@ -1,19 +1,20 @@
-import dynamic from "next/dynamic";
-import TestimonialPopup from "@/components/modules/HomePage/TestimonialPopup";
+// Main HomePage component export for Next.js App Router
+
 import Banner from "@/components/modules/HomePage/Banner";
+import ContentSuggestions from "@/components/modules/HomePage/ContentSuggestions";
+import HomeCTASection from "@/components/modules/HomePage/HomeCTASection";
 import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
 import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
-import InViewReveal from "@/components/modules/HomePage/InViewReveal";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
-
-import ContentSuggestions from "@/components/modules/HomePage/ContentSuggestions";
 import PremiumGlassBackground from "@/components/modules/HomePage/PremiumGlassBackground";
-import type { PremiumGlassIntensity } from "@/components/modules/HomePage/PremiumGlassBackground";
+import ReviewModal from "@/components/modules/HomePage/ReviewModal";
 import SmartNewsletter from "@/components/modules/HomePage/SmartNewsletter";
-import { getExperts } from "@/src/services/expert.services";
-import { getAllIndustries } from "@/src/services/industry.services";
-import type { IIndustry } from "@/src/types/industry.types";
+
+import type { PremiumGlassIntensity } from "@/components/modules/HomePage/PremiumGlassBackground";
 import type { ITestimonial } from "@/src/types/testimonial.types";
+
+import { getJobCategories } from "@/src/services/industry.services";
+import { getTestimonials } from "@/src/services/job.services";
 
 type HomeLayoutVariant = "compact" | "editorial" | "immersive";
 
@@ -29,112 +30,98 @@ const HOME_LAYOUT_PRESETS: Record<
 > = {
   compact: {
     backgroundIntensity: "calm",
-    stackClass: "mt-7 scroll-mt-24 space-y-5 md:mt-10 md:space-y-7 lg:mt-12 lg:space-y-8",
+    stackClass:
+      "mt-7 scroll-mt-24 space-y-5 md:mt-10 md:space-y-7 lg:mt-12 lg:space-y-8",
     surfaceClass:
       "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_12px_28px_-24px_rgba(15,23,42,0.2)] [--ce-shell-shadow-strong:0_18px_40px_-30px_rgba(15,23,42,0.24)]",
   },
+
   editorial: {
     backgroundIntensity: "balanced",
-    stackClass: "mt-10 scroll-mt-24 space-y-8 md:mt-14 md:space-y-10 lg:mt-16 lg:space-y-12",
+    stackClass:
+      "mt-7 scroll-mt-24 space-y-5 md:mt-10 md:space-y-7 lg:mt-12 lg:space-y-8",
     surfaceClass:
       "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_20px_44px_-32px_rgba(15,23,42,0.24)] [--ce-shell-shadow-strong:0_28px_62px_-38px_rgba(15,23,42,0.3)]",
   },
+
   immersive: {
     backgroundIntensity: "rich",
-    stackClass: "mt-12 scroll-mt-24 space-y-10 md:mt-16 md:space-y-12 lg:mt-20 lg:space-y-15",
+    stackClass:
+      "mt-12 scroll-mt-24 space-y-10 md:mt-16 md:space-y-12 lg:mt-20 lg:space-y-15",
     surfaceClass:
       "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_30px_68px_-38px_rgba(15,23,42,0.31)] [--ce-shell-shadow-strong:0_42px_96px_-48px_rgba(15,23,42,0.4)]",
   },
 };
 
-const fallbackTestimonials: ITestimonial[] = [
-  {
-    id: "fallback-1",
-    rating: 5,
-    comment: "ConsultEdge made it easy to find the right expert and book a valuable session fast.",
-    clientId: "client-1",
-    expertId: "expert-1",
-    consultationId: "consultation-1",
-    createdAt: new Date().toISOString(),
-    expert: { fullName: "Growth Specialist" },
-    client: { fullName: "Verified Client" },
-  },
-  {
-    id: "fallback-2",
-    rating: 5,
-    comment: "The platform feels modern, organized, and genuinely useful for business consultation workflows.",
-    clientId: "client-2",
-    expertId: "expert-2",
-    consultationId: "consultation-2",
-    createdAt: new Date().toISOString(),
-    expert: { fullName: "Strategy Advisor" },
-    client: { fullName: "Startup Founder" },
-  },
-  {
-    id: "fallback-3",
-    rating: 4,
-    comment: "From expert discovery to follow-up, the whole experience feels smooth and premium.",
-    clientId: "client-3",
-    expertId: "expert-3",
-    consultationId: "consultation-3",
-    createdAt: new Date().toISOString(),
-    expert: { fullName: "Operations Consultant" },
-    client: { fullName: "Business Owner" },
-  },
-  {
-    id: "fallback-4",
-    rating: 5,
-    comment: "The recommendations were practical and immediately useful for our next quarter plan.",
-    clientId: "client-4",
-    expertId: "expert-4",
-    consultationId: "consultation-4",
-    createdAt: new Date().toISOString(),
-    expert: { fullName: "Execution Advisor" },
-    client: { fullName: "Product Lead" },
-  },
-];
-
-const HomePage = async () => {
-  const layoutPreset = HOME_LAYOUT_PRESETS[HOME_LAYOUT_VARIANT];
-
-  const [expertsResult, industriesResult] = await Promise.allSettled([
-    getExperts(),
-    getAllIndustries(),
-   
+export default async function HomePage() {
+  // Fetch industries and testimonials for homepage modules
+  const [industries, testimonialsRaw] = await Promise.all([
+    getJobCategories(),
+    getTestimonials(),
   ]);
 
- 
-  const allIndustries: IIndustry[] =
-    industriesResult.status === "fulfilled" && Array.isArray(industriesResult.value?.data)
-      ? industriesResult.value.data
-      : [];
 
-  const featuredIndustries: IIndustry[] = allIndustries.slice(0, 6);
+  // Debug: log the raw testimonials
+  console.log("testimonialsRaw", testimonialsRaw);
+
+  // Map Testimonial (API) to ITestimonial (UI) with robust comment/content handling
+  function toITestimonial(t: any): ITestimonial {
+    return {
+      id: t.id,
+      rating: t.rating,
+      comment: t.comment ?? t.content ?? null,
+
+      candidateId: t.userRole === "CANDIDATE" ? t.userId : "",
+      recruiterId: t.userRole === "RECRUITER" ? t.userId : "",
+
+      reviewerName: t.user?.name ?? null,
+      reviewerImage: t.user?.profilePhoto ?? null,
+
+      interviewId: "",
+
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+
+      isHidden: false,
+      status: "APPROVED",
+
+      recruiterReply: null,
+      repliedAt: undefined,
+      moderationStatus: undefined,
+
+      candidate: undefined,
+      recruiter: undefined,
+      interview: undefined,
+    };
+  }
+
+  const testimonials: ITestimonial[] = testimonialsRaw.map(toITestimonial);
+
+  const preset = HOME_LAYOUT_PRESETS[HOME_LAYOUT_VARIANT];
 
   return (
-    <div className={`relative overflow-x-hidden bg-white pb-20 dark:bg-slate-950 ${layoutPreset.surfaceClass}`}>
-      <PremiumGlassBackground intensity={layoutPreset.backgroundIntensity} />
-      <Banner />
+    <main className="relative min-h-screen w-full overflow-x-hidden">
+      <ReviewModal />
 
-      <div id="home-after-hero" className={layoutPreset.stackClass}>
-        <InViewReveal delay={40}>
-          <IndustryTicker industries={featuredIndustries} />
-        </InViewReveal>
-       
-      
-        <InViewReveal delay={130}>
-          <ContentSuggestions industries={allIndustries} />
-        </InViewReveal>
-       
-        <InViewReveal delay={160}>
-          <HomeSection3 />
-        </InViewReveal>
-        <InViewReveal delay={180}>
-          <SmartNewsletter industries={allIndustries} />
-        </InViewReveal>
+      <PremiumGlassBackground
+        intensity={preset.backgroundIntensity}
+      />
+
+      <div className={preset.stackClass}>
+        <Banner />
+
+        <HomeCTASection />
+
+        <IndustryTicker industries={industries} />
+
+        <HomeSection2 testimonials={testimonials} />
+
+        <HomeSection3 />
+
+        <ContentSuggestions industries={industries} />
+
+        <SmartNewsletter industries={industries} />
       </div>
-    </div>
+    </main>
   );
-};
-
-export default HomePage;
+}

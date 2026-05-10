@@ -10,7 +10,7 @@ export const adminQuickActions = [
   { title: "Recruiters", desc: "Manage recruiters", href: "/admin/dashboard/recruiter-management", icon: "UserCog", gradient: "from-blue-500 to-cyan-500" },
   { title: "Candidates", desc: "Manage candidates", href: "/admin/dashboard/candidate-management", icon: "Users", gradient: "from-cyan-500 to-teal-500" },
   { title: "Jobs", desc: "All job posts", href: "/admin/dashboard/job-management", icon: "Layers", gradient: "from-indigo-500 to-blue-500" },
-  { title: "Payments", desc: "Revenue & payouts", href: "/admin/dashboard/payment-management", icon: "DollarSign", gradient: "from-emerald-500 to-teal-500" },
+    { title: "Payments", desc: "Revenue & payouts", href: "/admin/dashboard/payment-management", icon: "DollarSign", gradient: "from-emerald-500 to-teal-500" },
 ];
 export const recruiterMiniStats = (data: any, formatCurrency: (n: number) => string) => [
   { label: "Jobs Posted", value: data?.jobCount || 0 },
@@ -22,7 +22,7 @@ export const recruiterQuickActions = [
   { title: "Post Job", desc: "Create new job", href: "/recruiter/dashboard/post-job", icon: "PlusCircle", gradient: "from-blue-500 to-cyan-500" },
   { title: "My Jobs", desc: "Manage jobs", href: "/recruiter/dashboard/my-jobs", icon: "Layers", gradient: "from-cyan-500 to-teal-500" },
   { title: "Messages", desc: "Message candidates", href: "/recruiter/dashboard/messages", icon: "MessageSquare", gradient: "from-indigo-500 to-blue-500" },
-  { title: "Applications", desc: "View applications", href: "/recruiter/dashboard/applications", icon: "Users", gradient: "from-amber-500 to-orange-500" },
+    { title: "Applications", desc: "View applications", href: "/recruiter/dashboard/applications", icon: "Users", gradient: "from-amber-500 to-orange-500" },
 ];
 export const candidateMiniStats = (data: any) => [
   { label: "Jobs Applied", value: data?.appliedCount || 0 },

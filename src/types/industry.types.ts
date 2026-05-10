@@ -1,3 +1,18 @@
+// HireGPT: Industry type for frontend usage, matching Prisma model
+export interface IIndustry {
+  id: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  slug?: string | null;
+  isActive?: boolean;
+  jobCount?: number;
+  userCount?: number;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
 import { ApiResponse } from "./api.types";
 
 export interface IJobCategory {

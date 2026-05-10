@@ -10,6 +10,7 @@ import Table, {
   type DataTableFilterConfig,
   type DataTableFilterValues,
 } from "./Table";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,10 +21,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 import {
   Dialog,
   DialogContent,
@@ -32,14 +41,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
+
 import {
   deleteCandidateAction,
   getAllCandidates,
+  type ICandidate,
   type IUpdateCandidatePayload,
   updateCandidateAction,
-} from "@/src/services/client.service";
-import { type UserManagementItem, UserStatus } from "@/src/types/user.types";
+} from "@/src/services/candidate.service";
+
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null) {
@@ -62,31 +75,22 @@ const formatDate = (value?: string) => {
   return new Date(value).toLocaleDateString();
 };
 
-const getStatusBadge = (status?: string) => {
-  switch (status) {
-    case UserStatus.ACTIVE:
-      return (
-        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-200 dark:hover:bg-emerald-500/15">Active</Badge>
-      );
-    case UserStatus.BLOCKED:
-      return <Badge variant="destructive">Blocked</Badge>;
-    case UserStatus.DELETED:
-      return <Badge variant="secondary">Deleted</Badge>;
-    default:
-      return <Badge variant="outline">Unknown</Badge>;
-  }
-};
-
-const columns: ColumnDef<UserManagementItem>[] = [
+const columns: ColumnDef<ICandidate>[] = [
   {
-    accessorKey: "name",
+    accessorKey: "fullName",
     header: "Candidate",
     cell: ({ row }) => {
       const candidate = row.original;
+
       return (
         <div className="space-y-1">
-          <p className="font-medium">{candidate.name || "Unnamed candidate"}</p>
-          <p className="text-xs text-muted-foreground">ID: {candidate.userId ?? candidate.id}</p>
+          <p className="font-medium">
+            {candidate.fullName || "Unnamed candidate"}
+          </p>
+
+          <p className="text-xs text-muted-foreground">
+            ID: {candidate.userId ?? candidate.id}
+          </p>
         </div>
       );
     },
@@ -96,18 +100,11 @@ const columns: ColumnDef<UserManagementItem>[] = [
     header: "Email",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => getStatusBadge(row.original.status),
-  },
-  {
-    accessorKey: "emailVerified",
-    header: "Email verified",
+    accessorKey: "phone",
+    header: "Phone",
     cell: ({ row }) =>
-      row.original.emailVerified ? (
-        <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/15">Verified</Badge>
-      ) : (
-        <Badge variant="secondary">Pending</Badge>
+      row.original.phone || (
+        <span className="text-muted-foreground">—</span>
       ),
   },
   {
@@ -117,54 +114,44 @@ const columns: ColumnDef<UserManagementItem>[] = [
   },
 ];
 
-const filterConfigs: DataTableFilterConfig[] = [
-  {
-    id: "status",
-    label: "Status",
-    type: "single-select",
-    options: [
-      { label: "Active", value: UserStatus.ACTIVE },
-      { label: "Blocked", value: UserStatus.BLOCKED },
-      { label: "Deleted", value: UserStatus.DELETED },
-    ],
-  },
-  {
-    id: "emailVerified",
-    label: "Email verification",
-    type: "single-select",
-    options: [
-      { label: "Verified", value: "verified" },
-      { label: "Pending", value: "pending" },
-    ],
-  },
-];
+const filterConfigs: DataTableFilterConfig[] = [];
 
-const buildEditFormState = (candidate?: UserManagementItem | null) => ({
-  fullName: candidate?.fullName ?? candidate?.name ?? "",
+const buildEditFormState = (candidate?: ICandidate | null) => ({
+  fullName: candidate?.fullName ?? "",
   email: candidate?.email ?? "",
   phone: candidate?.phone ?? "",
   address: candidate?.address ?? "",
 });
 
-import { useServerDataTable } from "@/src/hooks/useServerDataTable";
-
 export default function CandidateManageTable() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
-  const [editTarget, setEditTarget] = useState<UserManagementItem | null>(null);
-  const [editForm, setEditForm] = useState(buildEditFormState());
-  const [candidateToDelete, setCandidateToDelete] = useState<UserManagementItem | null>(null);
+  const [filterValues, setFilterValues] =
+    useState<DataTableFilterValues>({});
+
+  const [editTarget, setEditTarget] = useState<ICandidate | null>(null);
+
+  const [editForm, setEditForm] = useState(
+    buildEditFormState()
+  );
+
+  const [candidateToDelete, setCandidateToDelete] =
+    useState<ICandidate | null>(null);
 
   const {
-    paginationState,
-    onPaginationChange,
-    sortingState,
-    onSortingChange,
     queryParams,
-  } = useServerDataTable({ defaultPageSize: 10 });
+  } = useServerDataTable({
+    defaultPageSize: 10,
+  });
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ["candidate-management-table", queryParams],
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["candidate-management-table", queryParams, searchTerm],
     queryFn: () =>
       getAllCandidates({
         page: queryParams.page,
@@ -173,8 +160,9 @@ export default function CandidateManageTable() {
         sortOrder: queryParams.sortOrder,
         searchTerm: searchTerm.trim() || undefined,
       }),
+
     staleTime: 60 * 1000,
-    placeholderData: (prev) => prev,
+    placeholderData: (previousData) => previousData,
   });
 
   const updateMutation = useMutation({
@@ -185,55 +173,73 @@ export default function CandidateManageTable() {
       candidateId: string;
       payload: IUpdateCandidatePayload;
     }) => updateCandidateAction(candidateId, payload),
-    onSuccess: () => {
+
+    onSuccess: async () => {
       toast.success("Candidate updated successfully.");
-      void refetch();
+      await refetch();
     },
+
     onError: (mutationError) => {
-      toast.error(getErrorMessage(mutationError, "Failed to update candidate."));
+      toast.error(
+        getErrorMessage(
+          mutationError,
+          "Failed to update candidate."
+        )
+      );
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (candidateId: string) => deleteCandidateAction(candidateId),
-    onSuccess: () => {
+    mutationFn: (candidateId: string) =>
+      deleteCandidateAction(candidateId),
+
+    onSuccess: async () => {
       toast.success("Candidate deleted successfully.");
-      void refetch();
+      await refetch();
     },
+
     onError: (mutationError) => {
-      toast.error(getErrorMessage(mutationError, "Failed to delete candidate."));
+      toast.error(
+        getErrorMessage(
+          mutationError,
+          "Failed to delete candidate."
+        )
+      );
     },
   });
 
-  const candidates = useMemo(() => (Array.isArray(data?.data) ? data.data : []), [data]);
+  const candidates = useMemo(
+    () =>
+      Array.isArray(data?.data)
+        ? (data.data as ICandidate[])
+        : [],
+    [data]
+  );
 
   const filteredCandidates = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const statusFilter = typeof filterValues.status === "string" ? filterValues.status : undefined;
-    const emailVerifiedFilter =
-      typeof filterValues.emailVerified === "string" ? filterValues.emailVerified : undefined;
+    const normalizedSearch =
+      searchTerm.trim().toLowerCase();
 
     return candidates.filter((candidate) => {
       const matchesSearch =
         !normalizedSearch ||
-        [candidate.name, candidate.email]
+        [candidate.fullName, candidate.email]
           .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(normalizedSearch));
+          .some((value) =>
+            value!
+              .toLowerCase()
+              .includes(normalizedSearch)
+          );
 
-      const matchesStatus = !statusFilter || candidate.status === statusFilter;
-      const matchesEmailVerified =
-        !emailVerifiedFilter ||
-        (emailVerifiedFilter === "verified"
-          ? Boolean(candidate.emailVerified)
-          : !candidate.emailVerified);
-
-      return matchesSearch && matchesStatus && matchesEmailVerified;
+      return matchesSearch;
     });
-  }, [candidates, filterValues, searchTerm]);
+  }, [candidates, searchTerm]);
 
-  const isActionPending = updateMutation.isPending || deleteMutation.isPending;
+  const isActionPending =
+    updateMutation.isPending ||
+    deleteMutation.isPending;
 
-  const openEditDialog = (candidate: UserManagementItem) => {
+  const openEditDialog = (candidate: ICandidate) => {
     setEditTarget(candidate);
     setEditForm(buildEditFormState(candidate));
   };
@@ -253,8 +259,18 @@ export default function CandidateManageTable() {
       payload: {
         fullName: editForm.fullName.trim(),
         email: editForm.email.trim(),
-        ...(editForm.phone.trim() ? { phone: editForm.phone.trim() } : {}),
-        ...(editForm.address.trim() ? { address: editForm.address.trim() } : {}),
+
+        ...(editForm.phone?.trim()
+          ? {
+              phone: editForm.phone.trim(),
+            }
+          : {}),
+
+        ...(editForm.address?.trim()
+          ? {
+              address: editForm.address.trim(),
+            }
+          : {}),
       },
     });
 
@@ -266,7 +282,10 @@ export default function CandidateManageTable() {
       return;
     }
 
-    await deleteMutation.mutateAsync(candidateToDelete.id);
+    await deleteMutation.mutateAsync(
+      candidateToDelete.id
+    );
+
     setCandidateToDelete(null);
   };
 
@@ -275,19 +294,24 @@ export default function CandidateManageTable() {
       <Card>
         <CardHeader>
           <CardTitle>Candidate management</CardTitle>
+
           <CardDescription>
-            Browse all candidate accounts with quick search, filters, sorting, and pagination.
+            Browse all candidate accounts with quick
+            search, filters, sorting, and pagination.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {isError ? (
             <Alert variant="destructive">
-              <AlertTitle>Could not load candidates</AlertTitle>
+              <AlertTitle>
+                Could not load candidates
+              </AlertTitle>
+
               <AlertDescription>
                 {error instanceof Error
                   ? error.message
-                  : "The candidate list is unavailable right now. Make sure the backend exposes `GET /candidates`."}
+                  : "The candidate list is unavailable right now. Make sure the backend exposes GET /candidates."}
               </AlertDescription>
             </Alert>
           ) : null}
@@ -298,14 +322,6 @@ export default function CandidateManageTable() {
             meta={data?.meta}
             isLoading={isLoading || isFetching}
             emptyMessage="No candidates match the current search or filters."
-            pagination={{
-              state: paginationState,
-              onPaginationChange,
-            }}
-            sorting={{
-              state: sortingState,
-              onSortingChange,
-            }}
             actions={{
               items: (candidate) => [
                 {
@@ -316,12 +332,14 @@ export default function CandidateManageTable() {
                 },
                 {
                   label: "Edit candidate",
-                  onClick: () => openEditDialog(candidate),
+                  onClick: () =>
+                    openEditDialog(candidate),
                   disabled: isActionPending,
                 },
                 {
                   label: "Delete",
-                  onClick: () => setCandidateToDelete(candidate),
+                  onClick: () =>
+                    setCandidateToDelete(candidate),
                   disabled: isActionPending,
                   destructive: true,
                 },
@@ -329,28 +347,46 @@ export default function CandidateManageTable() {
             }}
             search={{
               initialValue: searchTerm,
-              placeholder: "Search candidates by name or email...",
+              placeholder:
+                "Search candidates by name or email...",
               onDebouncedChange: setSearchTerm,
             }}
             filters={{
               configs: filterConfigs,
               values: filterValues,
-              onFilterChange: (filterId, value) => {
+
+              onFilterChange: (
+                filterId,
+                value
+              ) => {
                 setFilterValues((current) => ({
                   ...current,
                   [filterId]: value,
                 }));
               },
-              onClearAll: () => setFilterValues({}),
+
+              onClearAll: () =>
+                setFilterValues({}),
             }}
             toolbarAction={
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => void refetch()}
-                disabled={isLoading || isFetching || isActionPending}
+                disabled={
+                  isLoading ||
+                  isFetching ||
+                  isActionPending
+                }
               >
-                <RefreshCw className={`mr-2 size-4 ${isFetching ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`mr-2 size-4 ${
+                    isFetching
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                />
+
                 Refresh
               </Button>
             }
@@ -368,55 +404,89 @@ export default function CandidateManageTable() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit candidate</DialogTitle>
+            <DialogTitle>
+              Edit candidate
+            </DialogTitle>
+
             <DialogDescription>
               {editTarget
-                ? `Update profile information for ${editTarget.fullName || editTarget.name || editTarget.email}.`
+                ? `Update profile information for ${
+                    editTarget.fullName ||
+                    editTarget.email
+                  }.`
                 : "Update candidate account details."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-3">
             <div className="space-y-1.5">
-              <p className="text-sm font-medium text-foreground">Full name</p>
+              <p className="text-sm font-medium">
+                Full name
+              </p>
+
               <Input
                 value={editForm.fullName}
                 onChange={(event) =>
-                  setEditForm((current) => ({ ...current, fullName: event.target.value }))
+                  setEditForm((current) => ({
+                    ...current,
+                    fullName:
+                      event.target.value,
+                  }))
                 }
                 placeholder="Candidate full name"
               />
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-sm font-medium text-foreground">Email</p>
+              <p className="text-sm font-medium">
+                Email
+              </p>
+
               <Input
                 type="email"
                 value={editForm.email}
                 onChange={(event) =>
-                  setEditForm((current) => ({ ...current, email: event.target.value }))
+                  setEditForm((current) => ({
+                    ...current,
+                    email:
+                      event.target.value,
+                  }))
                 }
                 placeholder="candidate@example.com"
               />
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-sm font-medium text-foreground">Phone</p>
+              <p className="text-sm font-medium">
+                Phone
+              </p>
+
               <Input
                 value={editForm.phone}
                 onChange={(event) =>
-                  setEditForm((current) => ({ ...current, phone: event.target.value }))
+                  setEditForm((current) => ({
+                    ...current,
+                    phone:
+                      event.target.value,
+                  }))
                 }
                 placeholder="Optional phone number"
               />
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-sm font-medium text-foreground">Address</p>
+              <p className="text-sm font-medium">
+                Address
+              </p>
+
               <Input
                 value={editForm.address}
                 onChange={(event) =>
-                  setEditForm((current) => ({ ...current, address: event.target.value }))
+                  setEditForm((current) => ({
+                    ...current,
+                    address:
+                      event.target.value,
+                  }))
                 }
                 placeholder="Optional address"
               />
@@ -424,15 +494,26 @@ export default function CandidateManageTable() {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeEditDialog}>
-              Cancel
-            </Button>
             <Button
               type="button"
-              onClick={() => void submitEdit()}
-              disabled={updateMutation.isPending}
+              variant="outline"
+              onClick={closeEditDialog}
             >
-              {updateMutation.isPending ? "Saving..." : "Save changes"}
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              onClick={() =>
+                void submitEdit()
+              }
+              disabled={
+                updateMutation.isPending
+              }
+            >
+              {updateMutation.isPending
+                ? "Saving..."
+                : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -448,21 +529,40 @@ export default function CandidateManageTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete candidate account?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete candidate account?
+            </AlertDialogTitle>
+
             <AlertDialogDescription>
               {candidateToDelete
-                ? `This will permanently remove ${candidateToDelete.name || candidateToDelete.email}.`
+                ? `This will permanently remove ${
+                    candidateToDelete.fullName ||
+                    candidateToDelete.email
+                  }.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => void submitDelete()}
-              disabled={deleteMutation.isPending}
+            <AlertDialogCancel
+              disabled={
+                deleteMutation.isPending
+              }
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() =>
+                void submitDelete()
+              }
+              disabled={
+                deleteMutation.isPending
+              }
+            >
+              {deleteMutation.isPending
+                ? "Deleting..."
+                : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

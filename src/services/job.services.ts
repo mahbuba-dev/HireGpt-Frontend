@@ -1,3 +1,9 @@
+// Get all jobs (public listing) - direct fetch for reliability
+export async function getAllJobs(params: Record<string, any> = {}): Promise<Job[]> {
+  const res = await fetch('http://localhost:5000/api/v1/jobs', { next: { revalidate: 0 } });
+  const data = await res.json();
+  return Array.isArray(data.data) ? data.data : [];
+}
 // Post a new testimonial
 export async function postTestimonial(payload: {
   content: string;

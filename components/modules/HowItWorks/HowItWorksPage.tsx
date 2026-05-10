@@ -171,7 +171,7 @@ export default function HowItWorksPage() {
           <Route className="mr-1.5 size-3.5" />
           Simple by design
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-3xl">
           How{" "}
           <span className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 bg-clip-text text-transparent">
             ConsultEdge
@@ -195,7 +195,7 @@ export default function HowItWorksPage() {
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-blue-500 via-cyan-500 to-sky-500 opacity-60"
             />
-            <p className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent md:text-4xl dark:from-blue-400 dark:via-cyan-300 dark:to-sky-300">
+            <p className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 bg-clip-text text-2xl font-extrabold text-transparent md:text-3xl dark:from-blue-400 dark:via-cyan-300 dark:to-sky-300">
               <CountUp value={value} suffix={suffix} decimals={decimals ?? 0} />
             </p>
             <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -231,7 +231,7 @@ export default function HowItWorksPage() {
                   >
                     <Icon className="size-5" />
                   </span>
-                  <span className="select-none bg-linear-to-br from-slate-200 to-slate-100 bg-clip-text text-4xl font-black text-transparent dark:from-white/10 dark:to-cyan-400/20">
+                  <span className="select-none bg-linear-to-br from-slate-200 to-slate-100 bg-clip-text text-2xl font-black text-transparent dark:from-white/10 dark:to-cyan-400/20">
                     {number}
                   </span>
                 </div>
@@ -304,7 +304,7 @@ export default function HowItWorksPage() {
           </span>
 
           <div className="space-y-4">
-            <h2 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
+            <h2 className="text-2xl font-black leading-tight tracking-tight text-white md:text-3xl">
               The right expert is{" "}
               <span className="bg-linear-to-r from-blue-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent">
                 waiting for you.

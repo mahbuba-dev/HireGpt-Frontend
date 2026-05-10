@@ -247,6 +247,7 @@ const normalizeApiBaseUrl = (rawValue?: string) => {
   return value.endsWith("/api/v1") ? value : `${value}/api/v1`;
 };
 
+
 const API_BASE_URL =
   normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ??
   // Fall back to a harmless placeholder so the app can be built on platforms
@@ -254,6 +255,8 @@ const API_BASE_URL =
   // still fail loudly at runtime if the env var is missing, but the bundle
   // itself will always build.
   "http://localhost:5000/api/v1";
+
+console.log("[httpClient] API_BASE_URL in frontend:", API_BASE_URL);
 
 if (!process.env.NEXT_PUBLIC_API_BASE_URL && typeof window === "undefined") {
   // Log once during SSR/build so missing config is visible without crashing.
@@ -324,7 +327,7 @@ const axiosInstance = async () => {
     }
   }
 
-  return axios.create({
+  const instance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000,
     headers: {
@@ -334,6 +337,25 @@ const axiosInstance = async () => {
     },
     withCredentials: true,
   });
+
+  // Log all requests
+  // instance.interceptors.request.use((config) => {
+  //   console.log("[API REQUEST]", config.method?.toUpperCase(), config.baseURL + config.url);
+  //   return config;
+  // });
+
+  // Log all errors
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.config) {
+        console.error("[API ERROR]", error.config.method?.toUpperCase(), error.config.baseURL + error.config.url, error.response?.status);
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
 };
 
 // ---------------------------------------------

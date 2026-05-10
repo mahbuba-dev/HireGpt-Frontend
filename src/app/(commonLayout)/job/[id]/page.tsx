@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 
 
-import JobDetails from "@/components/modules/Experts/JobDetails";
+import JobDetails from "@/components/modules/JobsAction/JobDetails";
 import { getUserInfo } from "@/src/services/auth.services";
 import { getJobById } from "@/src/services/job.service";
 

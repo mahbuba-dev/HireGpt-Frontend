@@ -90,7 +90,7 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
     queryFn: () =>
       aiSummary({
         topic: previewTopic || "consulting",
-        industryIds: topIndustries.map((i) => i.id),
+        // industryIds: topIndustries.map((i) => i.id),
         kind: "newsletter-preview",
         source: "newsletter",
       }),

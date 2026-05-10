@@ -1,5 +1,5 @@
 import TestimonialsDirectory from "@/components/modules/HomePage/TestimonialsDirectory";
-import { getAllTestimonials } from "@/src/services/testimonial.services";
+import { getTestimonials } from "@/src/services/job.services";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 
 export const metadata = {
@@ -13,51 +13,68 @@ const fallbackTestimonials: ITestimonial[] = [
     id: "fallback-1",
     rating: 5,
     comment: "ConsultEdge helped us de-risk a key hiring decision in one session.",
-    clientId: "client-1",
-    expertId: "expert-1",
-    consultationId: "consultation-1",
+    candidateId: "",
+    recruiterId: "",
+    interviewId: "",
     createdAt: new Date().toISOString(),
-    expert: { fullName: "Hiring Strategy Expert" },
-    client: { fullName: "Operations Lead" },
+    candidate: { fullName: "Operations Lead" },
+    recruiter: { fullName: "Hiring Strategy Expert" },
   },
   {
     id: "fallback-2",
     rating: 5,
     comment: "Premium experience from discovery to booking. The advice was immediately actionable.",
-    clientId: "client-2",
-    expertId: "expert-2",
-    consultationId: "consultation-2",
+    candidateId: "",
+    recruiterId: "",
+    interviewId: "",
     createdAt: new Date().toISOString(),
-    expert: { fullName: "Growth Consultant" },
-    client: { fullName: "Startup Founder" },
+    candidate: { fullName: "Startup Founder" },
+    recruiter: { fullName: "Growth Consultant" },
   },
   {
     id: "fallback-3",
     rating: 4,
     comment: "Clean dashboard, fast scheduling, and high-quality experts. Highly recommended.",
-    clientId: "client-3",
-    expertId: "expert-3",
-    consultationId: "consultation-3",
+    candidateId: "",
+    recruiterId: "",
+    interviewId: "",
     createdAt: new Date().toISOString(),
-    expert: { fullName: "Business Advisor" },
-    client: { fullName: "Team Manager" },
+    candidate: { fullName: "Team Manager" },
+    recruiter: { fullName: "Business Advisor" },
   },
   {
     id: "fallback-4",
     rating: 5,
     comment: "I got clear direction in one call and avoided weeks of trial-and-error.",
-    clientId: "client-4",
-    expertId: "expert-4",
-    consultationId: "consultation-4",
+    candidateId: "",
+    recruiterId: "",
+    interviewId: "",
     createdAt: new Date().toISOString(),
-    expert: { fullName: "Execution Strategy Expert" },
-    client: { fullName: "Operations Manager" },
+    candidate: { fullName: "Operations Manager" },
+    recruiter: { fullName: "Execution Strategy Expert" },
   },
 ];
 
+function mapTestimonialToITestimonial(t: any): ITestimonial {
+  return {
+    id: t.id,
+    rating: t.rating,
+    comment: t.content || t.comment || "",
+    candidateId: t.userRole === "CANDIDATE" ? t.userId : "",
+    recruiterId: t.userRole === "RECRUITER" ? t.userId : "",
+    interviewId: t.interviewId || "",
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt || "",
+    candidate: t.userRole === "CANDIDATE" ? { fullName: t.user?.name } : undefined,
+    recruiter: t.userRole === "RECRUITER" ? { fullName: t.user?.name } : undefined,
+  };
+}
+
 export default async function TestimonialsPage() {
-  const data = await getAllTestimonials(32).catch(() => []);
-  const testimonials = data.length > 0 ? data : fallbackTestimonials;
+  const data = await getTestimonials().catch(() => []);
+  const testimonials: ITestimonial[] = Array.isArray(data) && data.length > 0
+    ? data.map(mapTestimonialToITestimonial)
+    : fallbackTestimonials;
 
   return (
     <main className="relative overflow-hidden pb-16 pt-6">

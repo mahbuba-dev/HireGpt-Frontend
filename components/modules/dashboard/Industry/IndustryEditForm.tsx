@@ -9,8 +9,8 @@ import AppSubmitButton from "@/components/form/AppSubmitButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getIndustryById, updateIndustry } from "@/src/services/industry.services";
-import type { IIndustryUpdatePayload } from "@/src/types/industry.types";
+import { getJobCategoryById, updateJobCategory } from "@/src/services/industry.services";
+import type { IJobCategoryUpdatePayload } from "@/src/types/industry.types";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null) {
@@ -37,17 +37,16 @@ export default function IndustryEditForm({ industryId }: IndustryEditFormProps) 
   const [isSaving, setIsSaving] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["industry", industryId],
-    queryFn: () => getIndustryById(industryId),
+    queryKey: ["job-category", industryId],
+    queryFn: () => getJobCategoryById(industryId),
     enabled: Boolean(industryId),
   });
 
   useEffect(() => {
-    const industry = data?.data;
-    if (!industry) return;
-
-    setName(industry.name ?? "");
-    setDescription(industry.description ?? "");
+    const jobCategory = data?.data;
+    if (!jobCategory) return;
+    setName(jobCategory.name ?? "");
+    setDescription(jobCategory.description ?? "");
   }, [data]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,7 +57,7 @@ export default function IndustryEditForm({ industryId }: IndustryEditFormProps) 
       return;
     }
 
-    const payload: IIndustryUpdatePayload = {
+    const payload: IJobCategoryUpdatePayload = {
       name: name.trim(),
       description: description.trim(),
       ...(file ? { file } : {}),
@@ -66,7 +65,7 @@ export default function IndustryEditForm({ industryId }: IndustryEditFormProps) 
 
     try {
       setIsSaving(true);
-      const res = (await updateIndustry(industryId, payload)) as
+      const res = (await updateJobCategory(industryId, payload)) as
         | { success?: boolean; message?: string }
         | undefined;
 

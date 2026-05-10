@@ -1,13 +1,30 @@
-// Delete a message from a chat room
-export const deleteRoomMessage = async (roomId: string, messageId: string) => {
-  const response = await httpClient.delete<{ messageId: string; success: boolean; message: string }>(
-    `/chat/rooms/${roomId}/messages/${messageId}`,
+// Utility: mark a chat room as read (set unreadCount to 0 for the given roomId)
+export function markChatRoomAsRead(rooms: any[], roomId: string) {
+  if (!Array.isArray(rooms)) return rooms;
+  return rooms.map(room =>
+    room.id === roomId ? { ...room, unreadCount: 0 } : room
+  );
+}
+// Utility: check if a message is from the current user
+export function isMessageFromCurrentUser(message: { senderId?: string; sender?: { userId?: string; id?: string } }, currentUserId?: string): boolean {
+  if (!message || !currentUserId) return false;
+  // Prefer sender.userId, then sender.id, then senderId
+  if (message.sender && (message.sender.userId === currentUserId || message.sender.id === currentUserId)) return true;
+  if (message.senderId === currentUserId) return true;
+  return false;
+}
+// Find or create a chat room for a given expert/participant
+export const findOrCreateRoomForExpert = async (participantId: string) => {
+  // You may want to adjust the payload if your backend expects expertId or a different key
+  const response = await httpClient.post<ChatRoom>(
+    `${CHAT_BASE_PATH}/rooms/find-or-create`,
+    { participantId },
     { silent: true }
   );
-  return response;
-// End of file
-
+  return normalizeChatRoom(response);
+};
 import { httpClient } from "../lib/axious/httpClient";
+
 import type {
   ChatAttachment,
   ChatCall,
@@ -20,7 +37,63 @@ import type {
   ChatRole,
 } from "../types/chat.types";
 
-// Helper type for upsertChatRoomActivity
+// Utility: get other participants in a room, excluding the current user
+export function getOtherParticipants({
+  participants,
+  currentUserId,
+  currentUserRole,
+}: {
+  participants: ChatParticipant[];
+  currentUserId?: string;
+  currentUserRole?: ChatRole | null;
+}): ChatParticipant[] {
+  if (!Array.isArray(participants)) return [];
+  // Exclude the current user by userId or id
+  return participants.filter((participant) => {
+    const pid = participant.userId ?? participant.id;
+    if (currentUserId && pid === currentUserId) return false;
+    // Optionally, filter by role if currentUserRole is provided and matches
+    if (currentUserRole && participant.role === currentUserRole) return false;
+    return true;
+  });
+}
+
+// Utility: get the emoji the current user reacted with (if any) on a message
+export function getCurrentUserReactionEmoji(
+  message: ChatMessage,
+  currentUserId: string
+): string | null {
+  if (!message?.reactions || !Array.isArray(message.reactions)) return null;
+  for (const reaction of message.reactions) {
+    if (reaction.reactorIds && reaction.reactorIds.includes(currentUserId)) {
+      return reaction.emoji;
+    }
+  }
+  return null;
+}
+
+const CHAT_BASE_PATH = "/chat";
+
+// Delete a message from a chat room
+export const deleteRoomMessage = async (
+  roomId: string,
+  messageId: string,
+) => {
+  const response = await httpClient.delete<{
+    messageId: string;
+    success: boolean;
+    message: string;
+  }>(
+    `${CHAT_BASE_PATH}/rooms/${roomId}/messages/${messageId}`,
+    {
+      silent: true,
+    },
+  );
+
+  return response;
+};
+
+// Helper type
 type UpsertChatRoomActivityOptions = {
   rooms: ChatRoom[];
   message: ChatMessage;
@@ -30,71 +103,125 @@ type UpsertChatRoomActivityOptions = {
 };
 
 // Helper: merge unique messages
-const mergeUniqueMessages = (messages: ChatMessage[]): ChatMessage[] => {
+export const mergeUniqueMessages = (
+  messages: ChatMessage[],
+): ChatMessage[] => {
   const merged = new Map<string, ChatMessage>();
   messages.forEach((message) => {
     merged.set(message.id, message);
   });
   return [...merged.values()].sort(
-    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+    (left, right) =>
+      new Date(left.createdAt).getTime() -
+      new Date(right.createdAt).getTime(),
   );
 };
 
-// Helper: normalizeChatCall (stub, implement as needed)
-const normalizeChatCall = (value: any): ChatCall => {
-  const raw = value?.call ?? value?.data ?? value;
+// Helper: replace a chat message in an array by id
+export const replaceChatMessage = (
+  messages: ChatMessage[],
+  updatedMessage: ChatMessage
+): ChatMessage[] => {
+  return messages.map((msg) =>
+    msg.id === updatedMessage.id ? updatedMessage : msg
+  );
+};
+
+// Helper: upsert chat room activity (add or update a message in a room)
+export const upsertChatRoomActivity = ({
+  rooms,
+  message,
+  currentUserId,
+  activeRoomId,
+  roomData,
+}: UpsertChatRoomActivityOptions): ChatRoom[] => {
+  return rooms.map((room) => {
+    if (room.id !== message.roomId) return room;
+    // Only update lastMessage and unreadCount, do not assume a messages array exists
+    return {
+      ...room,
+      lastMessage: message,
+      unreadCount:
+        activeRoomId === room.id && message.senderId === currentUserId
+          ? 0
+          : (room.unreadCount || 0) + (message.senderId !== currentUserId ? 1 : 0),
+      ...((roomData && typeof roomData === 'object') ? roomData : {}),
+    };
+  });
+};
+
+// Helper: normalize call
+const normalizeChatCall = (
+  value: any,
+): ChatCall => {
+  const raw =
+    value?.call ??
+    value?.data ??
+    value;
+
   return {
-    id: String(raw?.id ?? raw?.callId ?? `call-${Date.now()}`),
-    roomId: String(raw?.roomId ?? raw?.chatRoomId ?? ""),
-    status: (raw?.status ?? "RINGING") as ChatCallStatus,
-    startedAt: raw?.startedAt ?? raw?.createdAt,
-    startedBy: raw?.startedBy ?? raw?.callerId,
+    id: String(
+      raw?.id ??
+        raw?.callId ??
+        `call-${Date.now()}`,
+    ),
+    roomId: String(
+      raw?.roomId ??
+        raw?.chatRoomId ??
+        "",
+    ),
+    status: (
+      raw?.status ?? "RINGING"
+    ) as ChatCallStatus,
+    startedAt:
+      raw?.startedAt ??
+      raw?.createdAt,
+    startedBy:
+      raw?.startedBy ??
+      raw?.callerId,
   };
 };
 
-// Helper: normalizeChatRoom (must be before usage)
-const normalizeChatRoom = (value: any): ChatRoom => {
-  const raw = value?.room ?? value?.data ?? value;
-  const participants = toArray(raw?.participants ?? raw?.members ?? raw?.users).map(normalizeParticipant);
-  const lastMessage = raw?.lastMessage ? normalizeChatMessage(raw.lastMessage) : null;
-  const resolvedRoomId = raw?.id ?? raw?.roomId ?? raw?.chatRoomId;
-  const recruiterParticipant = participants.find((participant: ChatParticipant) => participant.role === "RECRUITER");
-  const candidateParticipant = participants.find((participant: ChatParticipant) => participant.role === "CANDIDATE");
-  return {
-    id: resolvedRoomId ? String(resolvedRoomId) : "",
-    name:
-      raw?.name ??
-      raw?.title ??
-      (participants.map((participant: ChatParticipant) => getParticipantDisplayName(participant)).join(", ") ||
-        "Conversation"),
-    participants,
-    lastMessage,
-    unreadCount: Number(raw?.unreadCount ?? raw?.unread ?? raw?.unreadMessagesCount ?? 0),
-    updatedAt: raw?.updatedAt ?? lastMessage?.createdAt ?? raw?.createdAt ?? new Date().toISOString(),
-    recruiterId: raw?.recruiterId ?? recruiterParticipant?.userId ?? recruiterParticipant?.id,
-    candidateId: raw?.candidateId ?? candidateParticipant?.userId ?? candidateParticipant?.id,
-  };
-};
-
-const CHAT_BASE_PATH = "/chat";
-
-const toArray = (value: unknown, nestedKeys: string[] = []): any[] => {
+const toArray = (
+  value: unknown,
+  nestedKeys: string[] = [],
+): any[] => {
   if (Array.isArray(value)) {
     return value;
   }
 
-  if (value && typeof value === "object") {
+  if (
+    value &&
+    typeof value === "object"
+  ) {
     for (const nestedKey of nestedKeys) {
-      const nestedValue = (value as Record<string, unknown>)[nestedKey];
+      const nestedValue = (
+        value as Record<
+          string,
+          unknown
+        >
+      )[nestedKey];
 
-      if (Array.isArray(nestedValue)) {
+      if (
+        Array.isArray(nestedValue)
+      ) {
         return nestedValue;
       }
 
-       if (nestedValue && typeof nestedValue === "object") {
-        const nestedArray = toArray(nestedValue, nestedKeys);
+      if (
+        nestedValue &&
+        typeof nestedValue ===
+          "object"
+      ) {
+        const nestedArray =
+          toArray(
+            nestedValue,
+            nestedKeys,
+          );
 
-        if (nestedArray.length > 0) {
+        if (
+          nestedArray.length > 0
+        ) {
           return nestedArray;
         }
       }
@@ -104,805 +231,476 @@ const toArray = (value: unknown, nestedKeys: string[] = []): any[] => {
   return [];
 };
 
-export const getParticipantDisplayName = (participant?: ChatParticipant | null) =>
-  participant?.fullName || participant?.name || participant?.email || "Unknown participant";
+export const getParticipantDisplayName = (
+  participant?:
+    | ChatParticipant
+    | null,
+) =>
+  participant?.fullName ||
+  participant?.name ||
+  participant?.email ||
+  "Unknown participant";
 
-export const getParticipantKey = (participant?: ChatParticipant | null) =>
-  String(participant?.userId ?? participant?.id ?? "");
-
-const isCurrentParticipant = (
-  participant: ChatParticipant,
-  currentUserId?: string,
-) => {
-  if (!currentUserId) {
-    return false;
-  }
-
-  return [participant.userId, participant.id]
-    .filter(Boolean)
-    .some((candidate) => String(candidate) === currentUserId);
-};
-
-export const getOtherParticipants = ({
-  participants,
-  currentUserId,
-  currentUserRole,
-}: {
-  participants: ChatParticipant[];
-  currentUserId?: string;
-  currentUserRole?: ChatRole | null;
-}) => {
-  const otherParticipantsById = participants.filter(
-    (participant) => !isCurrentParticipant(participant, currentUserId),
+export const getParticipantKey = (
+  participant?:
+    | ChatParticipant
+    | null,
+) =>
+  String(
+    participant?.userId ??
+      participant?.id ??
+      "",
   );
 
-  if (otherParticipantsById.length > 0 && otherParticipantsById.length < participants.length) {
-    return otherParticipantsById;
-  }
-
-  if (currentUserRole) {
-    const otherParticipantsByRole = participants.filter(
-      (participant) => participant.role !== currentUserRole,
-    );
-
-    if (otherParticipantsByRole.length > 0) {
-      return otherParticipantsByRole;
-    }
-  }
-
-  return participants.slice(1);
-};
-
-const normalizeParticipant = (value: any): ChatParticipant => ({
-  id: String(value?.id ?? value?.userId ?? value?.participantId ?? crypto.randomUUID()),
-  userId: value?.userId ? String(value.userId) : undefined,
-  role: (value?.role ?? "CANDIDATE") as ChatRole,
+const normalizeParticipant = (
+  value: any,
+): ChatParticipant => ({
+  id: String(
+    value?.id ??
+      value?.userId ??
+      value?.participantId ??
+      crypto.randomUUID(),
+  ),
+  userId: value?.userId
+    ? String(value.userId)
+    : undefined,
+  role: (
+    value?.role ??
+    "CANDIDATE"
+  ) as ChatRole,
   fullName:
     value?.fullName ??
     value?.name ??
     value?.user?.name ??
-    value?.admin?.name ??
-    value?.candidate?.fullName ??
-    value?.recruiter?.fullName,
+    value?.candidate
+      ?.fullName ??
+    value?.recruiter
+      ?.fullName,
   name:
     value?.name ??
     value?.fullName ??
-    value?.user?.name ??
-    value?.admin?.name ??
-    value?.candidate?.fullName ??
-    value?.recruiter?.fullName,
+    value?.user?.name,
   title: value?.title,
-  email: value?.email ?? value?.user?.email,
-  profilePhoto: value?.profilePhoto ?? value?.image ?? value?.avatarUrl ?? null,
-  avatarUrl: value?.avatarUrl ?? value?.profilePhoto ?? value?.image ?? null,
-  isOnline: value?.isOnline,
-  lastSeen: value?.lastSeen ?? null,
+  email:
+    value?.email ??
+    value?.user?.email,
+  profilePhoto:
+    value?.profilePhoto ??
+    value?.image ??
+    value?.avatarUrl ??
+    null,
+  avatarUrl:
+    value?.avatarUrl ??
+    value?.profilePhoto ??
+    value?.image ??
+    null,
+  isOnline:
+    value?.isOnline,
+  lastSeen:
+    value?.lastSeen ?? null,
 });
 
-const normalizeAttachment = (value: any): ChatAttachment => ({
+const normalizeAttachment = (
+  value: any,
+): ChatAttachment => ({
   id: value?.id,
-  fileName: value?.fileName ?? value?.name ?? "Attachment",
-  url: value?.url ?? value?.path ?? value?.secure_url ?? "",
-  mimeType: value?.mimeType ?? value?.type,
+  fileName:
+    value?.fileName ??
+    value?.name ??
+    "Attachment",
+  url:
+    value?.url ??
+    value?.path ??
+    value?.secure_url ??
+    "",
+  mimeType:
+    value?.mimeType ??
+    value?.type,
   size: value?.size,
 });
 
-const normalizeReactionActorIds = (value: any): string[] => {
-  if (!value) {
-    return [];
-  }
-
-  const entries = Array.isArray(value)
-    ? value
-    : Array.isArray(value?.users)
-      ? value.users
-      : Array.isArray(value?.user)
-        ? value.user
-      : Array.isArray(value?.reactors)
-        ? value.reactors
-        : Array.isArray(value?.participants)
-          ? value.participants
-          : Array.isArray(value?.members)
-            ? value.members
-          : Array.isArray(value?.items)
-            ? value.items
-            : [];
-
-  return entries
-    .map((entry: any) => {
-      if (typeof entry === "string" || typeof entry === "number") {
-        return String(entry);
-      }
-
-      return (
-        entry?.userId ??
-        entry?.id ??
-        entry?.participantId ??
-        entry?.reactorId ??
-        entry?.user?.id ??
-        entry?.member?.id
-      );
-    })
-    .filter(Boolean)
-    .map(String);
-};
-
-const REACTION_CONTAINER_KEYS = new Set([
-  "reaction",
-  "reactions",
-  "groupedReactions",
-  "reactionGroups",
-  "messageReaction",
-  "messageReactions",
-  "massageReaction",
-  "massageReactions",
-  "emojiReactions",
-  "items",
-  "data",
-  "groups",
-  "grouped",
-  "summary",
-  "emojiCounts",
-  "emojiSummary",
-  "aggregates",
-  "byEmoji",
-]);
-
-const mergeReactionsByEmoji = (reactions: ChatMessageReaction[]) => {
-  const merged = new Map<string, ChatMessageReaction>();
-
-  reactions.forEach((reaction: any) => {
-    const existing = merged.get(reaction.emoji);
-
-    if (!existing) {
-      merged.set(reaction.emoji, {
-        ...reaction,
-        reactorIds: Array.from(new Set(reaction.reactorIds ?? [])),
-      });
-      return;
-    }
-
-    const reactorIds = Array.from(
-      new Set([...(existing.reactorIds ?? []), ...(reaction.reactorIds ?? [])]),
-    );
-
-    merged.set(reaction.emoji, {
-      emoji: reaction.emoji,
-      count: Math.max(existing.count ?? 0, reaction.count ?? 0, reactorIds.length),
-      reactorIds,
-      reactedByCurrentUser: Boolean(
-        existing.reactedByCurrentUser || reaction.reactedByCurrentUser,
-      ),
-    });
-  });
-
-  return [...merged.values()];
-};
-
-const normalizeChatMessageReaction = (
+const normalizeChatMessageReactions = (
   value: any,
-  fallbackEmoji?: string,
-): ChatMessageReaction | null => {
-  if (!value && !fallbackEmoji) {
-    return null;
-  }
-
-  if (typeof value === "string") {
-    return {
-      emoji: value,
-      count: 1,
-      reactorIds: [],
-      reactedByCurrentUser: false,
-    };
-  }
-
-  if (typeof value === "number" && fallbackEmoji) {
-    return {
-      emoji: fallbackEmoji,
-      count: value,
-      reactorIds: [],
-      reactedByCurrentUser: false,
-    };
-  }
-
-  const safeFallbackEmoji =
-    fallbackEmoji && !REACTION_CONTAINER_KEYS.has(fallbackEmoji) ? fallbackEmoji : undefined;
-
-  const emoji = String(
-    value?.emoji ??
-      value?.emojiCode ??
-      value?.emojiValue ??
-      value?.reaction?.emoji ??
-      value?.reactionType?.emoji ??
-      value?.type?.emoji ??
-      value?.value?.emoji ??
-      value?.value ??
-      value?.label ??
-      safeFallbackEmoji ??
-      "",
-  ).trim();
-
-  if (!emoji) {
-    return null;
-  }
-
-  const reactorIds = Array.from(
-    new Set(
-      [
-        ...normalizeReactionActorIds(value?.reactorIds),
-        ...normalizeReactionActorIds(value?.userIds),
-        ...normalizeReactionActorIds(value?.participants),
-        ...normalizeReactionActorIds(value?.reactors),
-        ...normalizeReactionActorIds(value?.users),
-      ],
-    ),
-  );
-
-  const normalizedCount = Number(
-    value?.count ?? value?._count ?? value?.total ?? value?.aggregateCount ?? reactorIds.length ?? 0,
-  );
-
-  return {
-    emoji,
-    count: Number.isFinite(normalizedCount) && normalizedCount > 0 ? normalizedCount : reactorIds.length || 1,
-    reactorIds,
-    reactedByCurrentUser: Boolean(
-      value?.reactedByCurrentUser ??
-        value?.hasReacted ??
-        value?.userReacted ??
-        value?.selected ??
-        value?.isOwnReaction,
-    ),
-  };
-};
-
-const normalizeChatMessageReactions = (value: any): ChatMessageReaction[] => {
-  if (!value) {
+): ChatMessageReaction[] => {
+  if (!Array.isArray(value)) {
     return [];
   }
 
-  if (Array.isArray(value)) {
-    return mergeReactionsByEmoji(
-      value
-      .map((entry) => normalizeChatMessageReaction(entry))
-      .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
-    );
-  }
-
-  if (typeof value === "object") {
-    const nestedArray =
-      toArray(value, [
-        "reaction",
-        "reactions",
-        "items",
-        "data",
-        "groups",
-        "groupedReactions",
-        "reactionGroups",
-        "messageReaction",
-        "messageReactions",
-        "massageReaction",
-        "massageReactions",
-        "emojiReactions",
-        "grouped",
-        "summary",
-        "emojiCounts",
-        "emojiSummary",
-        "aggregates",
-        "byEmoji",
-      ]) ?? [];
-
-    if (nestedArray.length > 0) {
-      return mergeReactionsByEmoji(
-        nestedArray
-          .map((entry) => normalizeChatMessageReaction(entry))
-          .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
-      );
-    }
-
-    return mergeReactionsByEmoji(
-      Object.entries(value)
-        .filter(([emoji]) => !REACTION_CONTAINER_KEYS.has(emoji))
-        .map(([emoji, reactionValue]) => normalizeChatMessageReaction(reactionValue, emoji))
-        .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
-    );
-  }
-
-  return [];
+  return value.map(
+    (reaction: any) => ({
+      emoji:
+        reaction?.emoji ?? "👍",
+      count:
+        reaction?.count ?? 1,
+      reactorIds:
+        reaction?.reactorIds ??
+        [],
+      reactedByCurrentUser:
+        Boolean(
+          reaction?.reactedByCurrentUser,
+        ),
+    }),
+  );
 };
 
-const pickReactionSource = (...candidates: any[]) => {
-  for (const candidate of candidates) {
-    if (candidate == null) {
-      continue;
-    }
+export const normalizeChatMessage = (
+  value: any,
+): ChatMessage => {
+  const raw =
+    value?.message ??
+    value?.data ??
+    value;
 
-    if (Array.isArray(candidate)) {
-      if (candidate.length > 0) {
-        return candidate;
-      }
+  const sender =
+    raw?.sender ||
+    raw?.user
+      ? normalizeParticipant(
+          raw.sender ??
+            raw.user,
+        )
+      : null;
 
-      continue;
-    }
-
-    if (typeof candidate === "object") {
-      if (Object.keys(candidate).length > 0) {
-        return candidate;
-      }
-
-      continue;
-    }
-
-    return candidate;
-  }
-
-  return undefined;
-};
-
-export const normalizeChatMessage = (value: any): ChatMessage => {
-  const nestedData =
-    value?.data && typeof value.data === "object"
-      ? value.data.message && typeof value.data.message === "object"
-        ? {
-            ...value.data.message,
-            roomId:
-              value.data.message.roomId ??
-              value.data.roomId ??
-              value?.roomId,
-            reactions: pickReactionSource(
-              value.data.message.groupedReactions,
-              value.data.groupedReactions,
-              value.data.message.reactionGroups,
-              value.data.reactionGroups,
-              value.data.message.messageReaction,
-              value.data.messageReaction,
-              value.data.message.messageReactions,
-              value.data.messageReactions,
-              value.data.message.massageReaction,
-              value.data.message.massageReactions,
-              value.data.massageReaction,
-              value.data.massageReactions,
-              value.data.message.emojiReactions,
-              value.data.emojiReactions,
-              value.data.message.reaction,
-              value.data.reaction,
-              value.data.message.reactions,
-              value.data.reactions,
-            ),
-          }
-        : value.data
-      : undefined;
-  const directMessage =
-    value?.message && typeof value.message === "object"
-      ? {
-          ...value.message,
-          roomId: value.message.roomId ?? value?.roomId,
-          reactions: pickReactionSource(
-            value.message.groupedReactions,
-            value.groupedReactions,
-            value.message.reactionGroups,
-            value.reactionGroups,
-            value.message.messageReaction,
-            value.messageReaction,
-            value.message.messageReactions,
-            value.messageReactions,
-            value.message.massageReaction,
-            value.message.massageReactions,
-            value.massageReaction,
-            value.massageReactions,
-            value.message.emojiReactions,
-            value.emojiReactions,
-            value.message.reaction,
-            value.reaction,
-            value.message.reactions,
-            value.reactions,
-          ),
-        }
-      : undefined;
-  const payloadData =
-    value?.payload && typeof value.payload === "object"
-      ? {
-          ...value.payload,
-          ...(value.payload.message && typeof value.payload.message === "object"
-            ? value.payload.message
-            : {}),
-          roomId: value.payload.roomId ?? value?.roomId,
-          reactions: pickReactionSource(
-            value.payload.message?.groupedReactions,
-            value.payload.groupedReactions,
-            value.payload.message?.reactionGroups,
-            value.payload.reactionGroups,
-            value.payload.message?.messageReaction,
-            value.payload.messageReaction,
-            value.payload.message?.messageReactions,
-            value.payload.messageReactions,
-            value.payload.message?.massageReaction,
-            value.payload.message?.massageReactions,
-            value.payload.massageReaction,
-            value.payload.massageReactions,
-            value.payload.message?.emojiReactions,
-            value.payload.emojiReactions,
-            value.payload.message?.reaction,
-            value.payload.reaction,
-            value.payload.message?.reactions,
-            value.payload.reactions,
-          ),
-        }
-      : undefined;
-  const raw = nestedData ?? directMessage ?? payloadData ?? value;
-  const sender = raw?.sender || raw?.user || raw?.author ? normalizeParticipant(raw.sender ?? raw.user ?? raw.author) : null;
-  const attachment = raw?.attachment || raw?.file || raw?.media;
+  const attachment =
+    raw?.attachment ??
+    raw?.file ??
+    raw?.media;
 
   return {
-    id: String(raw?.id ?? `message-${Date.now()}`),
-    roomId: String(raw?.roomId ?? raw?.chatRoomId ?? ""),
-    text: raw?.text ?? raw?.content ?? "",
-    type: String(raw?.type ?? (attachment ? "FILE" : "TEXT")) as ChatMessageType,
-    createdAt: raw?.createdAt ?? new Date().toISOString(),
-    updatedAt: raw?.updatedAt,
-    senderId: String(raw?.senderId ?? sender?.userId ?? sender?.id ?? "unknown"),
-    senderRole: (raw?.senderRole ?? sender?.role ?? "CLIENT") as ChatRole,
+    id: String(
+      raw?.id ??
+        `message-${Date.now()}`,
+    ),
+    roomId: String(
+      raw?.roomId ??
+        raw?.chatRoomId ??
+        "",
+    ),
+    text:
+      raw?.text ??
+      raw?.content ??
+      "",
+    type: String(
+      raw?.type ??
+        (attachment
+          ? "FILE"
+          : "TEXT"),
+    ) as ChatMessageType,
+    createdAt:
+      raw?.createdAt ??
+      new Date().toISOString(),
+    updatedAt:
+      raw?.updatedAt,
+    senderId: String(
+      raw?.senderId ??
+        sender?.userId ??
+        sender?.id ??
+        "unknown",
+    ),
+    senderRole: (
+      raw?.senderRole ??
+      sender?.role ??
+      "CLIENT"
+    ) as ChatRole,
     sender,
-    attachment: attachment ? normalizeAttachment(attachment) : null,
-    reactions: normalizeChatMessageReactions(
-      pickReactionSource(
-        raw?.groupedReactions,
-        raw?.reactionGroups,
-        raw?.messageReaction,
-        raw?.messageReactions,
-        raw?.massageReaction,
-        raw?.massageReactions,
-        raw?.emojiReactions,
-        raw?.reaction,
+    attachment: attachment
+      ? normalizeAttachment(
+          attachment,
+        )
+      : null,
+    reactions:
+      normalizeChatMessageReactions(
         raw?.reactions,
       ),
+    pending: Boolean(
+      raw?.pending,
     ),
-    pending: Boolean(raw?.pending),
-    failed: Boolean(raw?.failed),
+    failed: Boolean(
+      raw?.failed,
+    ),
   };
 };
 
-export const upsertChatRoomActivity = ({
-  rooms,
-  message,
-  currentUserId,
-  activeRoomId,
-  roomData,
-}: UpsertChatRoomActivityOptions) => {
-  const updatedRooms = [...rooms];
-  const roomIndex = updatedRooms.findIndex((room) => room.id === message.roomId);
-  const normalizedRoom = roomData ? normalizeChatRoom(roomData) : null;
-  const safeNormalizedRoom = normalizedRoom?.id ? normalizedRoom : null;
-  const shouldIncrementUnread =
-    Boolean(message.senderId) &&
-    Boolean(currentUserId) &&
-    message.senderId !== currentUserId &&
-    activeRoomId !== message.roomId;
+// normalize room
+const normalizeChatRoom = (
+  value: any,
+): ChatRoom => {
+  const raw =
+    value?.room ??
+    value?.data ??
+    value;
 
-  if (roomIndex >= 0) {
-    const existingRoom = updatedRooms[roomIndex];
-    updatedRooms[roomIndex] = {
-      ...existingRoom,
-      ...(safeNormalizedRoom ?? {}),
-      participants:
-        safeNormalizedRoom?.participants?.length
-          ? safeNormalizedRoom.participants
-          : existingRoom.participants,
-      lastMessage: message,
-      updatedAt: message.createdAt,
-      unreadCount: shouldIncrementUnread
-        ? (existingRoom.unreadCount ?? 0) + 1
-        : activeRoomId === message.roomId
-          ? 0
-          : existingRoom.unreadCount ?? 0,
-    };
+  const participants =
+    toArray(
+      raw?.participants ??
+        raw?.members ??
+        raw?.users,
+    ).map(
+      normalizeParticipant,
+    );
 
-    return sortChatRooms(updatedRooms);
-  }
+  const lastMessage =
+    raw?.lastMessage
+      ? normalizeChatMessage(
+          raw.lastMessage,
+        )
+      : null;
 
-  const fallbackParticipants = safeNormalizedRoom?.participants?.length
-    ? safeNormalizedRoom.participants
-    : message.sender
-      ? [message.sender]
-      : [];
+  const recruiterParticipant =
+    participants.find(
+      (
+        participant: ChatParticipant,
+      ) =>
+        participant.role ===
+        "RECRUITER",
+    );
 
-  updatedRooms.unshift({
-    id: message.roomId,
-    name:
-      safeNormalizedRoom?.name ||
-      (fallbackParticipants.map((participant: ChatParticipant) => getParticipantDisplayName(participant)).join(", ") ||
-      "Conversation"),
-    participants: fallbackParticipants,
-    lastMessage: message,
-    unreadCount: shouldIncrementUnread ? 1 : 0,
-    updatedAt: message.createdAt,
-    recruiterId:
-      safeNormalizedRoom?.recruiterId ??
-      (fallbackParticipants.find((participant: ChatParticipant) => participant.role === "RECRUITER")?.userId ??
-      fallbackParticipants.find((participant: ChatParticipant) => participant.role === "RECRUITER")?.id),
-    candidateId:
-      safeNormalizedRoom?.candidateId ??
-      (fallbackParticipants.find((participant: ChatParticipant) => participant.role === "CANDIDATE")?.userId ??
-      fallbackParticipants.find((participant: ChatParticipant) => participant.role === "CANDIDATE")?.id),
-  });
-
-  return sortChatRooms(updatedRooms);
-};
-export const getCurrentUserReactionEmoji = (
-  message: ChatMessage,
-  currentUserId?: string,
-) => {
-  if (!currentUserId) {
-    return null;
-  }
-
-  const matchedReaction = (message.reactions ?? []).find(
-    (reaction) =>
-      reaction.reactedByCurrentUser ||
-      reaction.reactorIds?.includes(currentUserId),
-  );
-
-  return matchedReaction?.emoji ?? null;
-};
-
-export const toggleReactionLocally = ({
-  message,
-  emoji,
-  currentUserId,
-}: {
-  message: ChatMessage;
-  emoji: string;
-  currentUserId?: string;
-}): ChatMessage => {
-  if (!emoji || !currentUserId) {
-    return message;
-  }
-
-  const currentReactionEmoji = getCurrentUserReactionEmoji(message, currentUserId);
-
-  const nextReactions = (message.reactions ?? [])
-    .map((reaction: any) => {
-      const reactorIds = Array.from(new Set(reaction.reactorIds ?? []));
-      const hasCurrentUser =
-        reaction.reactedByCurrentUser || reactorIds.includes(currentUserId);
-
-      if (!hasCurrentUser) {
-        return reaction;
-      }
-
-      const remainingIds = reactorIds.filter((reactorId) => reactorId !== currentUserId);
-      const nextCount = Math.max(0, (reaction.count ?? reactorIds.length ?? 1) - 1);
-
-      if (nextCount === 0) {
-        return null;
-      }
-
-      return {
-        ...reaction,
-        count: nextCount,
-        reactorIds: remainingIds,
-        reactedByCurrentUser: false,
-      };
-    })
-    .filter((reaction: any): reaction is NonNullable<ChatMessage["reactions"]>[number] => Boolean(reaction));
-
-  if (currentReactionEmoji !== emoji) {
-    const targetIndex = nextReactions.findIndex((reaction: any) => reaction.emoji === emoji);
-
-    if (targetIndex === -1) {
-      nextReactions.push({
-        emoji,
-        count: 1,
-        reactorIds: [currentUserId],
-        reactedByCurrentUser: true,
-      });
-    } else {
-      const targetReaction = nextReactions[targetIndex];
-      const reactorIds = Array.from(new Set(targetReaction.reactorIds ?? []));
-
-      nextReactions[targetIndex] = {
-        ...targetReaction,
-        count: Math.max(0, targetReaction.count ?? reactorIds.length ?? 0) + 1,
-        reactorIds: reactorIds.includes(currentUserId)
-          ? reactorIds
-          : [...reactorIds, currentUserId],
-        reactedByCurrentUser: true,
-      };
-    }
-  }
+  const candidateParticipant =
+    participants.find(
+      (
+        participant: ChatParticipant,
+      ) =>
+        participant.role ===
+        "CANDIDATE",
+    );
 
   return {
-    ...message,
-    reactions: nextReactions,
+    id: String(
+      raw?.id ??
+        raw?.roomId ??
+        raw?.chatRoomId ??
+        "",
+    ),
+    name:
+      raw?.name ??
+      raw?.title ??
+      participants
+        .map((participant) =>
+          getParticipantDisplayName(
+            participant,
+          ),
+        )
+        .join(", "),
+    participants,
+    lastMessage,
+    unreadCount: Number(
+      raw?.unreadCount ?? 0,
+    ),
+    updatedAt:
+      raw?.updatedAt ??
+      lastMessage?.createdAt ??
+      new Date().toISOString(),
+    recruiterId:
+      raw?.recruiterId ??
+      recruiterParticipant?.id,
+    candidateId:
+      raw?.candidateId ??
+      candidateParticipant?.id,
   };
 };
 
-export const sortChatRooms = (rooms: ChatRoom[]) => {
+export const sortChatRooms = (
+  rooms: ChatRoom[],
+) => {
   return [...rooms].sort(
     (left, right) =>
-      new Date(right.updatedAt ?? right.lastMessage?.createdAt ?? 0).getTime() -
-      new Date(left.updatedAt ?? left.lastMessage?.createdAt ?? 0).getTime(),
-  );
-// Removed duplicate/legacy upsertChatRoomActivity, findOrCreateRoomForExpert, and expertId/clientId logic. Only recruiter/candidate version remains above.
-
-export const getChatRooms = async (params?: Record<string, unknown>): Promise<ChatRoom[]> => {
-  try {
-    const response = await httpClient.get<ChatRoom[] | { rooms?: ChatRoom[] }>(
-      `${CHAT_BASE_PATH}/rooms`,
-      {
-        params,
-        silent: true,
-      },
-    );
-
-    const rooms = toArray(response, ["rooms", "items", "data"]);
-    return sortChatRooms(
-      rooms
-        .map(normalizeChatRoom)
-        .filter((room) => Boolean(room.id)),
-    );
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
-      return [];
-    }
-
-    throw error;
-  }
-};
-
-const findMatchingRoom = (rooms: ChatRoom[], participantId: string) => {
-  return (
-    rooms.find(
-      (room) =>
-        room.id === participantId ||
-        room.recruiterId === participantId ||
-        room.candidateId === participantId ||
-        room.participants.some(
-          (participant: ChatParticipant) => participant.id === participantId || participant.userId === participantId,
-        ),
-    ) ?? null
+      new Date(
+        right.updatedAt ??
+          right.lastMessage
+            ?.createdAt ??
+          0,
+      ).getTime() -
+      new Date(
+        left.updatedAt ??
+          left.lastMessage
+            ?.createdAt ??
+          0,
+      ).getTime(),
   );
 };
 
-export const findOrCreateRoomForExpert = async (participantId: string): Promise<ChatRoom | null> => {
-  if (!participantId) {
-    return null;
-  }
-
-  const createPayloads = [
-    { expertId: participantId },
-    { clientId: participantId },
-    { participantId },
-    { userId: participantId },
-  ];
-
-  for (const payload of createPayloads) {
+export const getChatRooms =
+  async (
+    params?: Record<
+      string,
+      unknown
+    >,
+  ): Promise<ChatRoom[]> => {
     try {
-      const response = await httpClient.post<ChatRoom | { room?: ChatRoom }>(
-        `${CHAT_BASE_PATH}/rooms`,
-        payload,
-        { silent: true },
+      const response =
+        await httpClient.get<
+          | ChatRoom[]
+          | {
+              rooms?: ChatRoom[];
+            }
+        >(
+          `${CHAT_BASE_PATH}/rooms`,
+          {
+            params,
+            silent: true,
+          },
+        );
+
+      const rooms = toArray(
+        response,
+        [
+          "rooms",
+          "items",
+          "data",
+        ],
       );
 
-      if (response) {
-        const normalizedRoom = normalizeChatRoom(response);
-        if (normalizedRoom.id) {
-          return normalizedRoom;
-        }
+      return sortChatRooms(
+        rooms
+          .map(
+            normalizeChatRoom,
+          )
+          .filter((room) =>
+            Boolean(room.id),
+          ),
+      );
+    } catch (error: any) {
+      if (
+        error?.response?.status ===
+        404
+      ) {
+        return [];
       }
-    } catch {
-      // Try the next supported payload shape.
+
+      throw error;
     }
-  }
+  };
 
-  const queryVariants = [
-    { participantId },
-    { expertId: participantId },
-    { clientId: participantId },
-    { userId: participantId },
-  ];
-
-  for (const params of queryVariants) {
+export const getRoomMessages =
+  async (
+    roomId: string,
+  ): Promise<ChatMessage[]> => {
     try {
-      const rooms = await getChatRooms(params);
-      const matchedRoom = findMatchingRoom(rooms, participantId);
+      const response =
+        await httpClient.get<
+          | ChatMessage[]
+          | {
+              messages?: ChatMessage[];
+            }
+        >(
+          `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
+          {
+            silent: true,
+          },
+        );
 
-      if (matchedRoom) {
-        return matchedRoom;
+      const messages = toArray(
+        response,
+        [
+          "messages",
+          "items",
+          "data",
+        ],
+      );
+
+      return mergeUniqueMessages(
+        messages.map(
+          normalizeChatMessage,
+        ),
+      );
+    } catch (error: any) {
+      if (
+        error?.response?.status ===
+        404
+      ) {
+        return [];
       }
-    } catch {
-      // Keep trying available query shapes.
+
+      throw error;
     }
-  }
+  };
 
-  return null;
-};
+export const sendRoomMessage =
+  async (
+    roomId: string,
+    payload: {
+      text: string;
+    },
+  ): Promise<ChatMessage> => {
+    const response =
+      await httpClient.post<ChatMessage>(
+        `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
+        {
+          text: payload.text,
+        },
+        {
+          silent: true,
+        },
+      );
 
-export const getRoomMessages = async (roomId: string): Promise<ChatMessage[]> => {
-  try {
-    const response = await httpClient.get<ChatMessage[] | { messages?: ChatMessage[] }>(
-      `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
-      { silent: true },
+    return normalizeChatMessage(
+      response,
+    );
+  };
+
+export const uploadRoomAttachment =
+  async (
+    roomId: string,
+    file: File,
+  ): Promise<ChatMessage> => {
+    const formData =
+      new FormData();
+
+    formData.append(
+      "file",
+      file,
     );
 
-    const messages = toArray(response, ["messages", "items", "data"]);
-    return mergeUniqueMessages(messages.map(normalizeChatMessage));
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
-      return [];
-    }
+    const response =
+      await httpClient.post<ChatMessage>(
+        `${CHAT_BASE_PATH}/rooms/${roomId}/attachments`,
+        formData,
+        {
+          silent: true,
+          headers: {
+            "Content-Type":
+              "multipart/form-data",
+          },
+        },
+      );
 
-    throw error;
-  }
-};
+    return normalizeChatMessage(
+      response,
+    );
+  };
 
-export const toggleMessageReaction = async (
-  roomId: string,
-  messageId: string,
-  emoji: string,
-): Promise<ChatMessage> => {
-  const response = await httpClient.post<ChatMessage>(
-    `${CHAT_BASE_PATH}/rooms/${roomId}/messages/${messageId}/reactions`,
-    { emoji },
-    { silent: true },
-  );
+export const startRoomCall =
+  async (
+    roomId: string,
+  ): Promise<ChatCall> => {
+    const response =
+      await httpClient.post<ChatCall>(
+        `${CHAT_BASE_PATH}/rooms/${roomId}/calls`,
+        {},
+        {
+          silent: true,
+        },
+      );
 
-  return normalizeChatMessage(response);
-};
+    return normalizeChatCall(
+      response,
+    );
+  };
 
-export const sendRoomMessage = async (
-  roomId: string,
-  payload: { text: string },
-): Promise<ChatMessage> => {
-  const response = await httpClient.post<ChatMessage>(
-    `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
-    { text: payload.text },
-    { silent: true },
-  );
+export const updateCallStatus =
+  async (
+    callId: string,
+    status: ChatCallStatus = "ENDED",
+  ): Promise<ChatCall> => {
+    const response =
+      await httpClient.patch<ChatCall>(
+        `${CHAT_BASE_PATH}/calls/${callId}/status`,
+        { status },
+        {
+          silent: true,
+        },
+      );
 
-  return normalizeChatMessage(response);
-};
-
-export const uploadRoomAttachment = async (
-  roomId: string,
-  file: File,
-): Promise<ChatMessage> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await httpClient.post<ChatMessage>(
-    `${CHAT_BASE_PATH}/rooms/${roomId}/attachments`,
-    formData,
-    {
-      silent: true,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
-  );
-
-  return normalizeChatMessage(response);
-};
-
-export const startRoomCall = async (roomId: string): Promise<ChatCall> => {
-  const response = await httpClient.post<ChatCall>(
-    `${CHAT_BASE_PATH}/rooms/${roomId}/calls`,
-    {},
-    { silent: true },
-  );
-
-  return normalizeChatCall(response);
-};
-
-export const updateCallStatus = async (
-  callId: string,
-  status: ChatCallStatus = "ENDED",
-): Promise<ChatCall> => {
-  const response = await httpClient.patch<ChatCall>(
-    `${CHAT_BASE_PATH}/calls/${callId}/status`,
-    { status },
-    { silent: true },
-  );
-
-  return normalizeChatCall(response);
-};
+    return normalizeChatCall(
+      response,
+    );
+  };

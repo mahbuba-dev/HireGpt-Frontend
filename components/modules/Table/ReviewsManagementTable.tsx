@@ -13,10 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import {
-  getAllTestimonialsForAdmin,
-  updateTestimonialStatus,
-} from "@/src/services/testimonial.services";
+import { getTestimonials } from "@/src/services/job.services";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 import Table, { type DataTableFilterValues } from "./Table";
 import { useServerDataTable } from "@/src/hooks/useServerDataTable";
@@ -43,55 +40,37 @@ type TestimonialWithFallbacks = ITestimonial & {
 const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000;
 
 const getReviewerName = (review: ITestimonial) => {
-  const rawReview = review as TestimonialWithFallbacks;
-
   return (
-    review.client?.fullName ||
-    review.client?.user?.name ||
-    rawReview.clientName ||
-    rawReview.reviewerName ||
-    rawReview.fullName ||
-    rawReview.user?.name ||
+    review.candidate?.fullName ||
+    review.candidate?.user?.name ||
+    review.reviewerName ||
+    review.candidate?.email ||
+    review.candidate?.user?.email ||
     "Verified Client"
   );
 };
 
 const getReviewerEmail = (review: ITestimonial) => {
-  const rawReview = review as TestimonialWithFallbacks;
-
   return (
-    review.client?.email ||
-    review.client?.user?.email ||
-    rawReview.clientEmail ||
-    rawReview.reviewerEmail ||
-    rawReview.email ||
-    rawReview.user?.email ||
+    review.candidate?.email ||
+    review.candidate?.user?.email ||
+    // reviewer.reviewerEmail removed: not in ITestimonial
     ""
   );
 };
 
 const getSessionStatus = (review: ITestimonial) => {
-  const rawReview = review as TestimonialWithFallbacks;
-
   return (
-    review.consultation?.status ||
-    rawReview.consultationStatus ||
-    rawReview.sessionStatus ||
-    rawReview.bookingStatus ||
+    review.interview?.status ||
     review.status ||
-    rawReview.moderationStatus ||
+    review.moderationStatus ||
     "PENDING"
   );
 };
 
 const getSessionDate = (review: ITestimonial) => {
-  const rawReview = review as TestimonialWithFallbacks;
-
   return (
-    review.consultation?.date ||
-    rawReview.consultationDate ||
-    rawReview.sessionDate ||
-    rawReview.date ||
+    review.interview?.date ||
     review.createdAt
   );
 };
@@ -278,24 +257,36 @@ export default function ReviewsManagementTable() {
 
   const { data: reviewsResponse, isLoading, isFetching, isError, error, refetch } =
     useQuery({
-      // Include queryParams in the key so React Query refetches on page/limit change
-      queryKey: ["reviews-management-table", queryParams],
-      queryFn: () =>
-        getAllTestimonialsForAdmin({
-          page: queryParams.page,
-          limit: queryParams.limit,
-          sortBy: queryParams.sortBy,
-          sortOrder: queryParams.sortOrder,
-          searchTerm: searchTerm.trim() || undefined,
-        }),
+      queryKey: ["reviews-management-table"],
+      queryFn: getTestimonials,
       staleTime: 60 * 1000,
       placeholderData: (prev) => prev,
     });
 
-  const reviews = useMemo(
-    () => (Array.isArray(reviewsResponse?.data) ? reviewsResponse.data : []),
-    [reviewsResponse],
-  );
+  // Map Testimonial[] to ITestimonial[] for table usage
+  const reviews: ITestimonial[] = useMemo(() => {
+    if (!Array.isArray(reviewsResponse)) return [];
+    return reviewsResponse.map((t) => ({
+      id: t.id,
+      rating: t.rating,
+      comment: t.content || null,
+      candidateId: t.userId || "",
+      recruiterId: "",
+      reviewerName: t.user?.name || null,
+      reviewerImage: t.user?.profilePhoto || null,
+      interviewId: "",
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      isHidden: undefined,
+      status: undefined,
+      recruiterReply: undefined,
+      repliedAt: undefined,
+      moderationStatus: undefined,
+      candidate: undefined,
+      recruiter: undefined,
+      interview: undefined,
+    }));
+  }, [reviewsResponse]);
 
   const filteredReviews = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -306,15 +297,15 @@ export default function ReviewsManagementTable() {
       typeof filterValues.timeframe === "string" ? filterValues.timeframe : undefined;
     const thirtyDaysAgo = new Date().getTime() - THIRTY_DAYS_IN_MS;
 
-    return reviews.filter((review) => {
+    return reviews.filter((review: ITestimonial) => {
       const reviewDate = new Date(review.createdAt).getTime();
       const matchesSearch =
         !normalizedSearch ||
         [
           getReviewerName(review),
           getReviewerEmail(review),
-          review.expert?.fullName,
-          review.expert?.title,
+          review.recruiter?.fullName,
+          review.recruiter?.title,
           review.comment,
         ]
           .filter(Boolean)
@@ -340,234 +331,44 @@ export default function ReviewsManagementTable() {
     });
   }, [filterValues, reviews, searchTerm]);
 
-  const handleCopyReview = async (review: ITestimonial) => {
-    try {
-      await navigator.clipboard.writeText(
-        [
-          `Reviewer: ${getReviewerName(review)}`,
-          `Expert: ${review.expert?.fullName || "Unknown expert"}`,
-          `Rating: ${Number(review.rating || 0).toFixed(1)} / 5`,
-          `Comment: ${review.comment || "No written feedback provided."}`,
-        ].join("\n"),
-      );
-
-      toast.success("Review copied to clipboard.");
-    } catch (copyError) {
-      toast.error(getErrorMessage(copyError, "Unable to copy this review right now."));
-    }
-  };
-
-  const handleEmailClient = (review: ITestimonial) => {
-    const email = getReviewerEmail(review);
-
-    if (!email) {
-      toast.error("This reviewer does not have a contact email available.");
-      return;
-    }
-
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(
-      "ConsultEdge review follow-up",
-    )}`;
-  };
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({
-      testimonialId,
-      status,
-    }: {
-      testimonialId: string;
-      status: "APPROVED" | "HIDDEN";
-    }) => updateTestimonialStatus(testimonialId, status),
-
-    onSuccess: async (_, variables) => {
-      toast.success(
-        variables.status === "HIDDEN"
-          ? "Review hidden from the admin listing."
-          : "Review approved successfully.",
-      );
-      await queryClient.invalidateQueries({ queryKey: ["reviews-management-table"] });
-    },
-
-    onError: (mutationError) => {
-      toast.error(getErrorMessage(mutationError, "Failed to update review visibility."));
-    },
-  });
-
-  const hasActiveFilters =
-    Boolean(searchTerm.trim()) || Object.values(filterValues).some(Boolean);
-
   return (
-      <div className="space-y-6">
-        <ReviewSummaryCards reviews={reviews} />
-
-        <Card className="relative overflow-hidden border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400" />
-          <div className="pointer-events-none absolute -right-24 -top-24 hidden size-72 rounded-full bg-cyan-500/10 blur-3xl dark:block" />
-
-          <CardHeader className="relative">
-            <CardTitle className="text-xl font-bold tracking-tight">Review moderation workspace</CardTitle>
-            <CardDescription>
-              Admins can moderate visibility and manage review records, while experts publish the
-              actual replies.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="relative space-y-4">
-            {isError ? (
-              <Alert variant="destructive">
-                <AlertTitle>Could not load reviews</AlertTitle>
-                <AlertDescription>
-                  {error instanceof Error
-                    ? error.message
-                    : "The reviews feed is unavailable right now."}
-                </AlertDescription>
-              </Alert>
-            ) : null}
-
-            <Table
-              data={filteredReviews}
-              columns={columns}
-              meta={reviewsResponse?.meta}
-              tableClassName="w-full min-w-[900px]"
-              headCellClassName="whitespace-nowrap align-middle"
-              bodyCellClassName="whitespace-normal wrap-break-word align-top"
-              isLoading={isLoading || isFetching}
-              emptyMessage={
-                hasActiveFilters
-                  ? "No reviews match the current search or filters."
-                  : "No client reviews have been submitted yet."
-              }
-              pagination={{
-                state: paginationState,
-                onPaginationChange,
-              }}
-              sorting={{
-                state: sortingState,
-                onSortingChange,
-              }}
-              search={{
-                initialValue: searchTerm,
-                placeholder: "Search by client, expert, or feedback...",
-                onDebouncedChange: setSearchTerm,
-              }}
-              filters={{
-                configs: [
-                  {
-                    id: "rating",
-                    label: "Rating",
-                    type: "single-select",
-                    options: [
-                      { label: "5 stars", value: "5" },
-                      { label: "4 stars", value: "4" },
-                      { label: "3 stars", value: "3" },
-                      { label: "2 stars", value: "2" },
-                      { label: "1 star", value: "1" },
-                    ],
-                  },
-                  {
-                    id: "visibility",
-                    label: "Visibility",
-                    type: "single-select",
-                    options: [
-                      { label: "Visible", value: "visible" },
-                      { label: "Hidden", value: "hidden" },
-                    ],
-                  },
-                  {
-                    id: "timeframe",
-                    label: "Submitted",
-                    type: "single-select",
-                    options: [
-                      { label: "Last 30 days", value: "last-30" },
-                      { label: "Older than 30 days", value: "older" },
-                    ],
-                  },
-                ],
-                values: filterValues,
-                onFilterChange: (filterId, value) =>
-                  setFilterValues((previous) => ({ ...previous, [filterId]: value })),
-                onClearAll: () => setFilterValues({}),
-              }}
-              toolbarAction={
-                <Button variant="outline" onClick={() => void refetch()} disabled={isFetching}>
-                  <RefreshCw className={`mr-2 size-4 ${isFetching ? "animate-spin" : ""}`} />
-                  Refresh
-                </Button>
-              }
-              actions={{
-                onView: (review) => {
-                  if (review.expert?.id) {
-                    router.push(`/experts/${review.expert.id}`);
-                    return;
-                  }
-                  toast.error("This review is not linked to a public expert profile.");
-                },
-
-                items: (review) => {
-                  const visibilityStatus = getVisibilityStatus(review);
-                  const isHidden = visibilityStatus === "HIDDEN";
-                  const isApproved = visibilityStatus === "APPROVED";
-                  const isPending = visibilityStatus === "PENDING";
-
-                  return [
-                    ...(isPending || isHidden
-                      ? [
-                          {
-                            label: "Approve review",
-                            onClick: () =>
-                              updateStatusMutation.mutate({
-                                testimonialId: review.id,
-                                status: "APPROVED",
-                              }),
-                            disabled: updateStatusMutation.isPending,
-                          },
-                        ]
-                      : []),
-
-                    ...(isApproved
-                      ? [
-                          {
-                            label: "Hide review",
-                            onClick: () =>
-                              updateStatusMutation.mutate({
-                                testimonialId: review.id,
-                                status: "HIDDEN",
-                              }),
-                            disabled: updateStatusMutation.isPending,
-                          },
-                        ]
-                      : []),
-
-                    ...(isHidden
-                      ? [
-                          {
-                            label: "Unhide review",
-                            onClick: () =>
-                              updateStatusMutation.mutate({
-                                testimonialId: review.id,
-                                status: "APPROVED",
-                              }),
-                            disabled: updateStatusMutation.isPending,
-                          },
-                        ]
-                      : []),
-
-                    {
-                      label: "Email client",
-                      onClick: () => handleEmailClient(review),
-                      disabled: !getReviewerEmail(review),
-                    },
-
-                    {
-                      label: "Copy feedback",
-                      onClick: () => void handleCopyReview(review),
-                    },
-                  ];
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-6">
+      <ReviewSummaryCards reviews={reviews} />
+      <Card className="relative overflow-hidden border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
+        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400" />
+        <div className="pointer-events-none absolute -right-24 -top-24 hidden size-72 rounded-full bg-cyan-500/10 blur-3xl dark:block" />
+        <CardHeader className="relative">
+          <CardTitle className="text-xl font-bold tracking-tight">Review workspace</CardTitle>
+          <CardDescription>
+            View and search all client reviews. Moderation actions are not available in this build.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="relative space-y-4">
+          {isError ? (
+            <Alert variant="destructive">
+              <AlertTitle>Could not load reviews</AlertTitle>
+              <AlertDescription>
+                {error instanceof Error
+                  ? error.message
+                  : "The reviews feed is unavailable right now."}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <Table
+            data={filteredReviews}
+            columns={columns}
+            tableClassName="w-full min-w-[900px]"
+            headCellClassName="whitespace-nowrap align-middle"
+            bodyCellClassName="whitespace-normal wrap-break-word align-top"
+            isLoading={isLoading || isFetching}
+            emptyMessage={
+              Boolean(searchTerm.trim()) || Object.values(filterValues).some(Boolean)
+                ? "No reviews match the current search or filters."
+                : "No client reviews have been submitted yet."
+            }
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

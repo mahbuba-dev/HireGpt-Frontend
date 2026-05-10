@@ -33,7 +33,7 @@ const normalizeRecruiter = (record: any): Recruiter => ({
 });
 
 export const getAllRecruiters = async (params: Record<string, unknown> = {}): Promise<ApiResponse<Recruiter[]>> => {
-  const response = await httpClient.get<Recruiter[]>("/recruiters", { params, silent: true });
+  const response = await httpClient.get<Recruiter[]>("/reqruiters", { params, silent: true });
   return {
     ...response,
     data: Array.isArray(response.data) ? response.data.map(normalizeRecruiter) : [],
@@ -41,16 +41,16 @@ export const getAllRecruiters = async (params: Record<string, unknown> = {}): Pr
 };
 
 export const getRecruiterById = async (recruiterId: string): Promise<Recruiter | null> => {
-  const response = await httpClient.get<Recruiter>(`/recruiters/${recruiterId}`, { silent: true });
+  const response = await httpClient.get<Recruiter>(`/reqruiters/${recruiterId}`, { silent: true });
   return response.data ? normalizeRecruiter(response.data) : null;
 };
 
 export const updateRecruiter = async (recruiterId: string, payload: UpdateRecruiterPayload): Promise<Recruiter> => {
-  const response = await httpClient.put<Recruiter>(`/recruiters/${recruiterId}`, payload);
+  const response = await httpClient.put<Recruiter>(`/reqruiters/${recruiterId}`, payload);
   return normalizeRecruiter(response.data);
 };
 
 export const deleteRecruiter = async (recruiterId: string): Promise<Recruiter> => {
-  const response = await httpClient.delete<Recruiter>(`/recruiters/${recruiterId}`);
+  const response = await httpClient.delete<Recruiter>(`/reqruiters/${recruiterId}`);
   return normalizeRecruiter(response.data);
 };

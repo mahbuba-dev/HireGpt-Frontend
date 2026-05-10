@@ -33,12 +33,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+// Remove old DropdownMenu imports; we'll use custom hover/focus dropdowns
 import LogoutButton from "@/components/modules/auth/LogoutButton";
 import HomeSearchBar from "@/components/modules/HomePage/search/HomeSearchBar";
 
@@ -84,17 +79,24 @@ const NavbarClient = ({
   const isDarkMode = resolvedTheme === "dark";
   const themeLabel = isDarkMode ? "Light mode" : "Dark mode";
 
-  const visiblePrimary = navItems.filter(
-    (item) => item.label === "Home" || item.label === "Experts",
-  );
+  // Define dropdown menu items for each section
   const discoverItems = navItems.filter((item) =>
     ["Industries", "Insights", "Testimonials", "Process", "About", "FAQ"].includes(item.label),
   );
-  const moreItems = navItems.filter(
-    (item) =>
-      !visiblePrimary.some((x) => x.href === item.href) &&
-      !discoverItems.some((x) => x.href === item.href),
-  );
+  const jobSeekerItems = [
+    { label: "Find Jobs", href: "/jobs" },
+    { label: "My Applications", href: "/applications" },
+    { label: "Resume Tips", href: "/resources/resume-tips" },
+    { label: "Saved Jobs", href: "/saved-jobs" },
+    // Add more as needed
+  ];
+  const companyItems = [
+    { label: "Post a Job", href: "/recruiter/dashboard/post-job" },
+    { label: "Company Dashboard", href: "/recruiter/my-jobs" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Browse Talent", href: "/talent" },
+    // Add more as needed
+  ];
 
   const isAdmin = role === "ADMIN";
   const isExpert = role === "EXPERT";
@@ -125,10 +127,10 @@ const NavbarClient = ({
 
   return (
     <header
-      className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/30 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
+      className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80/90 backdrop-blur-md dark:border-white/10 dark:bg-slate-950/80"
     >
-      <div className="mx-auto w-full max-w-360 px-4 py-3 md:px-6">
-        <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
+      <div className="mx-auto w-full max-w-360 px-2 py-1 md:px-4">
+        <div className="relative z-110 flex items-center justify-between gap-2 rounded-xl border border-white/50 bg-white/90 px-2 py-1.5 shadow-md backdrop-blur-lg dark:border-white/10 dark:bg-slate-900/80 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex items-center gap-3">
             <Image
@@ -140,95 +142,70 @@ const NavbarClient = ({
             />
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-white/75 px-2 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60 lg:flex">
-            {visiblePrimary.map((item) => {
-              const isActive = isActiveRoute(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`relative rounded-full px-3 py-2 text-sm font-medium transition-all
-                    ${isActive
-                      ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-sm"
-                      : "text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"}
-                  group
-                  `}
-                >
-                  <span className="relative z-10">{item.label}</span>
-                  <span
-                    className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 w-[calc(100%-2rem)] origin-left scale-x-0 bg-linear-to-r from-blue-500 to-cyan-400 opacity-80 transition-transform duration-250 ease-out group-hover:scale-x-100"
-                    aria-hidden="true"
-                  />
-                </Link>
-              );
-            })}
-
-            {discoverItems.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="h-9 rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+          <nav className="hidden items-center gap-2 lg:flex">
+            {/* Discover Dropdown */}
+            <div className="relative group">
+              <button
+                className="rounded-full px-4 py-2 text-sm font-semibold transition-all backdrop-blur bg-white/60 border border-slate-200/70 shadow hover:bg-white/80 focus:bg-white/90 dark:bg-slate-950/60 dark:border-white/10 dark:hover:bg-slate-900/80 dark:focus:bg-slate-900/90"
+                tabIndex={0}
+                type="button"
+              >
+                Discover
+              </button>
+              <div className="absolute left-0 top-full z-120 mt-2 hidden min-w-45 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-xl backdrop-blur-lg dark:border-white/10 dark:bg-slate-950/95 group-hover:block group-focus-within:block">
+                {discoverItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="block rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
                   >
-                    Discover
-                    <ChevronDown className="ml-1 size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
-                  {discoverItems.map((item) => {
-                    const isActive = isActiveRoute(item.href);
-                    return (
-                      <DropdownMenuItem key={item.href} asChild>
-                        <Link
-                          href={item.href}
-                          className={`rounded-xl px-3 py-2 text-sm ${
-                            isActive
-                              ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-
-            {moreItems.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="h-9 rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {/* Job Seekers Dropdown */}
+            <div className="relative group">
+              <button
+                className="rounded-full px-4 py-2 text-sm font-semibold transition-all backdrop-blur bg-white/60 border border-slate-200/70 shadow hover:bg-white/80 focus:bg-white/90 dark:bg-slate-950/60 dark:border-white/10 dark:hover:bg-slate-900/80 dark:focus:bg-slate-900/90"
+                tabIndex={0}
+                type="button"
+              >
+                For job seekers
+              </button>
+              <div className="absolute left-0 top-full z-120 mt-2 hidden min-w-45 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-xl backdrop-blur-lg dark:border-white/10 dark:bg-slate-950/95 group-hover:block group-focus-within:block">
+                {jobSeekerItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="block rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
                   >
-                    More
-                    <ChevronDown className="ml-1 size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
-                  {moreItems.map((item) => {
-                    const isActive = isActiveRoute(item.href);
-                    return (
-                      <DropdownMenuItem key={item.href} asChild>
-                        <Link
-                          href={item.href}
-                          className={`rounded-xl px-3 py-2 text-sm ${
-                            isActive
-                              ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {/* Companies Dropdown */}
+            <div className="relative group">
+              <button
+                className="rounded-full px-4 py-2 text-sm font-semibold transition-all backdrop-blur bg-white/60 border border-slate-200/70 shadow hover:bg-white/80 focus:bg-white/90 dark:bg-slate-950/60 dark:border-white/10 dark:hover:bg-slate-900/80 dark:focus:bg-slate-900/90"
+                tabIndex={0}
+                type="button"
+              >
+                For companies
+              </button>
+              <div className="absolute left-0 top-full z-120 mt-2 hidden min-w-45 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-xl backdrop-blur-lg dark:border-white/10 dark:bg-slate-950/95 group-hover:block group-focus-within:block">
+                {companyItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="block rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <div className="hidden items-center gap-2.5 lg:flex">
@@ -244,7 +221,8 @@ const NavbarClient = ({
                     variant="ghost"
                     size="icon"
                     onClick={handleThemeToggle}
-                    className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                    aria-label="Toggle theme"
+                    className="relative size-8 rounded-full border border-slate-200/80 bg-white/90 text-slate-600 backdrop-blur transition-transform duration-200 hover:scale-110 hover:bg-orange-50 hover:text-orange-600 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-orange-300"
                   >
                     {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
@@ -255,46 +233,38 @@ const NavbarClient = ({
               </Tooltip>
 
               {isLoggedIn ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-2.5 text-slate-700 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
-                    >
-                      <span className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-[11px] leading-none font-bold text-white">
-                        {getInitials(userLabel)}
-                      </span>
-                      <span className="max-w-22 truncate text-xs font-semibold">{userLabel ?? "Profile"}</span>
-                      <ChevronDown className="ml-1 size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
-                    <DropdownMenuItem asChild>
-                      <Link href={dashboardHref} className="rounded-xl px-3 py-2 text-sm">
-                        <LayoutDashboard className="mr-2 size-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={bookingHref} className="rounded-xl px-3 py-2 text-sm">
-                        <BriefcaseBusiness className="mr-2 size-4" />
-                        {bookingLabel}
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/my-profile" className="rounded-xl px-3 py-2 text-sm">
-                        <Settings className="mr-2 size-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="p-0 focus:bg-transparent">
+                <div className="relative group">
+                  <button
+                    className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-2.5 text-slate-700 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200 flex items-center"
+                    tabIndex={0}
+                    type="button"
+                  >
+                    <span className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-[11px] leading-none font-bold text-white">
+                      {getInitials(userLabel)}
+                    </span>
+                    <span className="max-w-22 truncate text-xs font-semibold">{userLabel ?? "Profile"}</span>
+                  </button>
+                  <div className="absolute right-0 top-full z-120 mt-2 hidden w-56 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95 group-hover:block group-focus-within:block">
+                    <Link href={dashboardHref} className="flex items-center rounded-xl px-3 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-200">
+                      <LayoutDashboard className="mr-2 size-4" />
+                      Dashboard
+                    </Link>
+                    <Link href={bookingHref} className="flex items-center rounded-xl px-3 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-200">
+                      <BriefcaseBusiness className="mr-2 size-4" />
+                      {bookingLabel}
+                    </Link>
+                    <Link href="/my-profile" className="flex items-center rounded-xl px-3 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-200">
+                      <Settings className="mr-2 size-4" />
+                      Settings
+                    </Link>
+                    <div className="p-0 focus:bg-transparent">
                       <LogoutButton className="inline-flex h-9 w-full items-center rounded-xl px-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30">
                         <LogOut className="mr-2 size-4" />
                         Logout
                       </LogoutButton>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <Button
                   asChild

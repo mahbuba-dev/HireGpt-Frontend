@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   ArrowRight,
   ArrowUpRight,
+  CalendarClock,
+  CalendarDays,
+  CheckCircle2,
   Compass,
-  MessageSquare,
   Search,
   Sparkles,
-  UserCircle2,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +23,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import OverviewDashboardContent from "./OverviewDashboardContent";
 import RecentConsultationsTable from "../shared/RecentConsultationsTable";
 import StatsCard from "../shared/StatsCard";
 import { MiniStatsRibbon } from "./MiniStatsRibbon";
-import { QuickActions } from "./QuickActions";
-import { clientMiniStats, clientQuickActions } from "@/src/lib/navItems";
+import ConsultationsPieChart from "../shared/ConsultationsPieCharts"; // Corrected import
+
+ // Removed clientMiniStats import, using candidateMiniStats instead
+import { candidateMiniStats } from "@/src/lib/navItems"; // No clientMiniStats export, use candidateMiniStats instead
 import { getDashboardData } from "@/src/services/dashboard.services";
-import type { ApiResponse } from "@/src/types/api.types";
+
 import type { ICandidateDashboardStats } from "@/src/types/candidate.dashboard";
 
 const formatStatusLabel = (status: string) =>
@@ -38,26 +43,57 @@ const formatStatusLabel = (status: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const ClientDashboardContent = () => {
-  const { data: clientDashboardResponse, isLoading, isError } = useQuery({
+  const {
+    data: clientDashboardResponse,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["candidate-dashboard-data"],
-    queryFn: () => getDashboardData<ICandidateDashboardStats>(),
+    queryFn: () =>
+      getDashboardData<ICandidateDashboardStats>(),
     refetchOnWindowFocus: false,
     retry: false,
   });
 
-  // ...existing code...
+  const data =
+    clientDashboardResponse?.data ??
+    clientDashboardResponse;
+
+  const statusItems =
+    (data as any)?.consultationStatusDistribution || (data as any)?.statusItems || []; // Updated fallback logic
+
+  const completedCount =
+    statusItems.find(
+      (item: any) =>
+        item.status === "COMPLETED",
+    )?.count ?? 0;
+
+  const pendingCount =
+    statusItems.find(
+      (item: any) =>
+        item.status === "PENDING",
+    )?.count ?? 0;
+
+  const activeCount =
+    statusItems.find(
+      (item: any) =>
+        item.status === "ONGOING",
+    )?.count ?? 0;
 
   if (isLoading) {
     return (
       <div className="grid gap-6">
         <div className="h-40 animate-pulse rounded-2xl bg-muted/60" />
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-28 animate-pulse rounded-xl bg-muted/60"
-            />
-          ))}
+          {Array.from({ length: 3 }).map(
+            (_, index) => (
+              <div
+                key={index}
+                className="h-28 animate-pulse rounded-xl bg-muted/60"
+              />
+            ),
+          )}
         </div>
       </div>
     );
@@ -67,39 +103,25 @@ const ClientDashboardContent = () => {
     return (
       <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle>Unable to load client dashboard</CardTitle>
+          <CardTitle>
+            Unable to load client dashboard
+          </CardTitle>
+
           <CardDescription>
-            Please refresh the page to retrieve your dashboard stats.
+            Please refresh the page to retrieve
+            your dashboard stats.
           </CardDescription>
         </CardHeader>
-      return (
-        <div className="space-y-8">
-          <OverviewDashboardContent role="CANDIDATE" />
-          {/* Mini stats ribbon */}
-          <div className="grid grid-cols-3 gap-3">
-            {[{ label: "Total", value: data?.consultationCount || 0 }, { label: "Done", value: completedCount }, { label: "Live", value: activeCount }].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-white/25 bg-white/10 p-4 backdrop-blur-md">
-                <p className="text-xs uppercase tracking-wider text-white/70">{s.label}</p>
-                <p className="mt-1 text-2xl font-bold">{s.value}</p>
-              </div>
-            ))}
-          </div>
-          {/* Quick actions */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {[
-              { title: "Browse jobs", desc: "Find opportunities", href: "/jobs", icon: Search, gradient: "from-blue-500 to-cyan-500" },
-              { title: "Saved jobs", desc: "Bookmarked", href: "/jobs/saved", icon: Compass, gradient: "from-cyan-500 to-teal-500" },
-            ].map((action) => (
-              <Link key={action.title} href={action.href} className="w-full">
-                <Button className={`w-full bg-gradient-to-r ${action.gradient} text-white shadow-md hover:opacity-90`}>
-                  <action.icon className="mr-2 size-4" />
-                  {action.title}
-                </Button>
-              </Link>
-            ))}
-          </div>
-        </div>
-      );
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <OverviewDashboardContent role="CANDIDATE" />
+
+      {/* Hero */}
+      <Card className="relative overflow-hidden border-0 bg-linear-to-br from-slate-900 via-blue-900 to-cyan-800 text-white shadow-2xl">
         <CardContent className="relative z-10 grid gap-8 p-6 md:p-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
           <div className="space-y-4">
             <Badge className="border-white/30 bg-white/15 text-white backdrop-blur hover:bg-white/15">
@@ -108,15 +130,17 @@ const ClientDashboardContent = () => {
             </Badge>
 
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold leading-tight md:text-4xl">
+              <h1 className="text-2xl font-bold leading-tight md:text-3xl">
                 Your consultation hub,{" "}
-                <span className="bg-linear-to-r from-cyan-100 to-white bg-clip-text text-transparent">
+                 <span className="bg-linear-to-r from-cyan-100 to-white bg-clip-text text-transparent">
                   reimagined.
                 </span>
               </h1>
+
               <p className="max-w-xl text-sm text-white/85 md:text-base">
-                Track sessions, message experts, and discover the next step —
-                all from one polished workspace.
+                Track sessions, message experts,
+                and discover the next step — all
+                from one polished workspace.
               </p>
             </div>
 
@@ -127,6 +151,7 @@ const ClientDashboardContent = () => {
                   Find experts
                 </Button>
               </Link>
+
               <Link href="/dashboard/consultations">
                 <Button
                   variant="outline"
@@ -139,45 +164,115 @@ const ClientDashboardContent = () => {
             </div>
           </div>
 
-          <MiniStatsRibbon stats={clientMiniStats(data)} />
+          <MiniStatsRibbon
+            stats={candidateMiniStats(data)} // Updated to use candidateMiniStats
+          />
         </CardContent>
       </Card>
 
-      <QuickActions actions={clientQuickActions} />
+      {/* Mini stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          {
+            label: "Total",
+             value:
+               (data as any)?.consultationCount || 0,
+          },
+          {
+            label: "Done",
+            value: completedCount,
+          },
+          {
+            label: "Live",
+            value: activeCount,
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl border border-border/50 bg-card p-4"
+          >
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              {s.label}
+            </p>
+
+            <p className="mt-1 text-2xl font-bold">
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          {
+            title: "Browse jobs",
+            href: "/jobs",
+            icon: Search,
+            gradient:
+              "from-blue-500 to-cyan-500",
+          },
+          {
+            title: "Saved jobs",
+            href: "/jobs/saved",
+            icon: Compass,
+            gradient:
+              "from-cyan-500 to-teal-500",
+          },
+        ].map((action) => (
+          <Link
+            key={action.title}
+            href={action.href}
+            className="w-full"
+          >
+            <Button
+              className={`w-full bg-linear-to-r ${action.gradient} text-white shadow-md hover:opacity-90`}
+            >
+              <action.icon className="mr-2 size-4" />
+              {action.title}
+            </Button>
+          </Link>
+        ))}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatsCard
           title="Total Consultations"
-          value={data.consultationCount || 0}
+           value={
+             (data as any)?.consultationCount || 0
+           }
           iconName="CalendarDays"
           description="All consultations linked to your account"
-          className="bg-linear-to-br from-blue-50 to-white dark:from-blue-950/40 dark:to-slate-900"
+           className="bg-linear-to-br from-blue-50 to-white dark:from-blue-950/40 dark:to-slate-900"
         />
+
         <StatsCard
           title="Completed"
           value={completedCount}
           iconName="CheckCircle2"
           description="Sessions successfully finished"
-          className="bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/35 dark:to-slate-900"
+           className="bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/35 dark:to-slate-900"
         />
+
         <StatsCard
           title="Pending"
           value={pendingCount}
           iconName="CalendarClock"
           description="Upcoming or awaiting confirmation"
-          className="bg-linear-to-br from-amber-50 to-white dark:from-amber-950/30 dark:to-slate-900"
+           className="bg-linear-to-br from-amber-50 to-white dark:from-amber-950/30 dark:to-slate-900"
         />
+
         <StatsCard
           title="Ongoing"
           value={activeCount}
           iconName="Activity"
           description="Live consultation progress"
-          className="bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/35 dark:to-slate-900"
+           className="bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/35 dark:to-slate-900"
         />
       </div>
 
-      {/* Pie chart + smart next steps */}
+      {/* Chart + next steps */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <ConsultationsPieChart
@@ -189,58 +284,84 @@ const ClientDashboardContent = () => {
 
         <Card className="relative overflow-hidden border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
           <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400" />
+
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="size-4 text-cyan-500" />
               Smart next steps
             </CardTitle>
+
             <CardDescription>
-              Keep your workflow moving with these quick actions.
+              Keep your workflow moving with
+              these quick actions.
             </CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div className="rounded-xl border border-blue-200/60 bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
                 <Compass className="size-4" />
                 Recommended focus
               </div>
+
               <p className="text-sm text-muted-foreground">
                 {pendingCount > 0
-                  ? `You have ${pendingCount} pending consultation${pendingCount > 1 ? "s" : ""}. Review them first.`
+                  ? `You have ${pendingCount} pending consultation${
+                      pendingCount > 1
+                        ? "s"
+                        : ""
+                    }. Review them first.`
                   : "You are all caught up. Explore new experts for your next session."}
               </p>
             </div>
 
             <div className="space-y-2">
               {statusItems.length > 0 ? (
-                statusItems.map((item) => (
-                  <div
-                    key={item.status}
-                    className="flex items-center justify-between rounded-lg border border-slate-200/60 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/5"
-                  >
-                    <span className="text-sm font-medium">
-                      {formatStatusLabel(item.status)}
-                    </span>
-                    <Badge variant="secondary">{item.count}</Badge>
-                  </div>
-                ))
+                statusItems.map(
+                  (item: any) => (
+                    <div
+                      key={item.status}
+                      className="flex items-center justify-between rounded-lg border border-slate-200/60 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/5"
+                    >
+                      <span className="text-sm font-medium">
+                        {formatStatusLabel(
+                          item.status,
+                        )}
+                      </span>
+
+                      <Badge variant="secondary">
+                        {item.count}
+                      </Badge>
+                    </div>
+                  ),
+                )
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No consultation data available yet.
+                  No consultation data
+                  available yet.
                 </p>
               )}
             </div>
 
             <div className="space-y-2 pt-1">
-              <Link href="/experts" className="inline-flex w-full">
+              <Link
+                href="/experts"
+                className="inline-flex w-full"
+              >
                 <Button className="w-full justify-between bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 hover:from-blue-700 hover:to-cyan-600">
                   Browse experts
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>
 
-              <Link href="/my-profile" className="inline-flex w-full">
-                <Button variant="outline" className="w-full justify-between">
+              <Link
+                href="/my-profile"
+                className="inline-flex w-full"
+              >
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                >
                   Update profile
                   <ArrowRight className="size-4" />
                 </Button>
@@ -253,7 +374,7 @@ const ClientDashboardContent = () => {
       <RecentConsultationsTable
         data={statusItems}
         title="Recent Consultation Snapshot"
-        description="Your latest consultation activity, grouped by live status from the dashboard endpoint."
+        description="Your latest consultation activity grouped by live status."
       />
     </div>
   );

@@ -2,7 +2,13 @@
 
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import HomeSearchDropdown from "@/components/modules/HomePage/search/HomeSearchDropdown";
 import {
@@ -24,6 +30,7 @@ export default function HomeSearchBar({
   onNavigate,
 }: HomeSearchBarProps) {
   const router = useRouter();
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,109 +38,127 @@ export default function HomeSearchBar({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const suggestions = useMemo(() => filterNavigationSuggestions(query), [query]);
+  const isMobile = variant === "mobile";
 
-  return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "relative w-full max-w-xl",
-        variant === "navbar"
-          ? "hidden md:block"
-          : "block w-full px-2 py-2 md:hidden",
-        className,
-      )}
-    >
-      <div className="glass-card flex items-center gap-2 rounded-full px-4 py-2 transition focus-within:border-cyan-400 focus-within:shadow-[0_0_0_4px_rgba(34,211,238,0.12)]">
-        <Search className="size-5 text-slate-400 dark:text-slate-500" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search jobs, experts, or sections..."
-          className="flex-1 bg-transparent py-1 text-base outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
-        />
-        {!!query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-white"
-            aria-label="Clear search"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
-      <HomeSearchDropdown
-        open={open && suggestions.length > 0}
-        suggestions={suggestions}
-        activeIndex={activeIndex}
-        onHover={setActiveIndex}
-        onSelect={handleSelect}
-      />
-    </div>
-  };
+  const suggestions = useMemo(
+    () => filterNavigationSuggestions(query),
+    [query],
+  );
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSelect = useCallback(
+    (suggestion: NavigationSuggestion) => {
+      navigateToSuggestion(router, suggestion, onNavigate);
+
+      setQuery("");
+      setOpen(false);
+      setActiveIndex(0);
+    },
+    [router, onNavigate],
+  );
+
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (!suggestions.length) return;
+
     if (event.key === "ArrowDown") {
       event.preventDefault();
+
       setOpen(true);
-      setActiveIndex((value) => Math.min(suggestions.length - 1, value + 1));
+
+      setActiveIndex((prev) =>
+        Math.min(prev + 1, suggestions.length - 1),
+      );
+
       return;
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActiveIndex((value) => Math.max(0, value - 1));
+
+      setActiveIndex((prev) => Math.max(prev - 1, 0));
+
       return;
     }
 
     if (event.key === "Enter") {
       event.preventDefault();
-      const target = suggestions[activeIndex] ?? suggestions[0];
+
+      const target =
+        suggestions[activeIndex] ?? suggestions[0];
+
       if (target) {
         handleSelect(target);
       }
+
       return;
     }
 
     if (event.key === "Escape") {
-      event.preventDefault();
-      closeDropdown();
-      inputRef.current?.blur();
+      setOpen(false);
     }
   };
 
-  const isMobile = variant === "mobile";
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
+    };
+  }, []);
 
   return (
-    <div ref={containerRef} className={cn("relative w-full", className)}>
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative w-full",
+        variant === "navbar"
+          ? "hidden max-w-xl md:block"
+          : "block w-full px-2 py-2 md:hidden",
+        className,
+      )}
+    >
       <div
         className={cn(
-          "group flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 backdrop-blur transition-all",
+          "group flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-4 backdrop-blur transition-all",
           "focus-within:border-cyan-400 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(34,211,238,0.15)]",
           "dark:border-white/10 dark:bg-slate-900/70 dark:focus-within:bg-slate-900",
-          isMobile ? "h-10" : "h-9",
+          isMobile ? "h-11" : "h-10",
         )}
       >
         <Search className="size-4 shrink-0 text-muted-foreground" />
+
         <input
           ref={inputRef}
+          type="text"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setOpen(true);
+            setActiveIndex(0);
           }}
           onFocus={() => {
-            // On mobile variant, only open dropdown when user actually types,
-            // so opening the hamburger menu doesn't auto-open results.
-            if (variant !== "mobile") setOpen(true);
+            if (!isMobile || query.length > 0) {
+              setOpen(true);
+            }
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Jump to pages, sections..."
+          placeholder="Search jobs, recruiters, candidates..."
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           aria-label="Home navigation search"
           aria-expanded={open}
@@ -146,9 +171,10 @@ export default function HomeSearchBar({
             type="button"
             onClick={() => {
               setQuery("");
+              setOpen(false);
               inputRef.current?.focus();
             }}
-            className="rounded-full p-0.5 text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-white/10"
+            className="rounded-full p-1 text-muted-foreground transition hover:bg-slate-100 hover:text-foreground dark:hover:bg-white/10"
             aria-label="Clear search"
           >
             <X className="size-3.5" />
@@ -161,24 +187,27 @@ export default function HomeSearchBar({
       </div>
 
       <HomeSearchDropdown
-        open={open}
+        open={open && suggestions.length > 0}
         suggestions={suggestions}
         activeIndex={activeIndex}
         onHover={setActiveIndex}
         onSelect={handleSelect}
       />
 
-      {open ? (
+      {open && suggestions.length > 0 ? (
         <div className="mt-1.5 flex items-center justify-between px-1 text-[10px] text-slate-500 dark:text-slate-400">
           <span className="inline-flex items-center gap-1">
             <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
               ↑
             </kbd>
+
             <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
               ↓
             </kbd>
+
             navigate
           </span>
+
           <span>Enter to open</span>
         </div>
       ) : null}

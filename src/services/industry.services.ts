@@ -21,7 +21,7 @@ export const getAllJobCategories = async (
   try {
     if (typeof params === "string") {
       const res = await httpClient.get<IJobCategory[]>(
-        params ? `/job-categories?${params}` : "/job-categories",
+        params ? `/industries?${params}` : "/industries",
       );
 
       return {
@@ -30,7 +30,7 @@ export const getAllJobCategories = async (
       };
     }
 
-    const res = await httpClient.get<IJobCategory[]>("/job-categories", {
+    const res = await httpClient.get<IJobCategory[]>("/industries", {
       params: (params ?? {}) as Record<string, unknown>,
       silent: true,
     });

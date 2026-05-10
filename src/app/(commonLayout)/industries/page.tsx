@@ -1,5 +1,5 @@
-import { getAllIndustries } from "@/src/services/industry.services";
-import type { IIndustry } from "@/src/types/industry.types";
+import { getAllJobCategories } from "@/src/services/industry.services";
+import type { IJobCategory } from "@/src/types/industry.types";
 import IndustriesHybridClient from "./IndustriesHybridClient";
 
 // Render on-demand so build doesn't fail if the backend is unreachable
@@ -8,15 +8,16 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 12;
 
+
 export default async function IndustriesPage() {
-  const industriesResponse = await getAllIndustries({
+  const jobCategoriesResponse = await getAllJobCategories({
     page: 1,
     limit: 500,
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-  const industries: IIndustry[] = Array.isArray(industriesResponse?.data)
-    ? industriesResponse.data
+  const jobCategories: IJobCategory[] = Array.isArray(jobCategoriesResponse?.data)
+    ? jobCategoriesResponse.data
     : [];
 
   return (
@@ -47,7 +48,7 @@ export default async function IndustriesPage() {
           </p>
         </div>
 
-        <IndustriesHybridClient industries={industries} pageSize={PAGE_SIZE} />
+        <IndustriesHybridClient industries={jobCategories} pageSize={PAGE_SIZE} />
       </section>
     </main>
   );

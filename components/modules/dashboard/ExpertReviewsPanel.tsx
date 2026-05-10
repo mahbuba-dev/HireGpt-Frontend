@@ -29,10 +29,7 @@ import type { IUserProfile } from "@/src/types/auth.types";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getTestimonialsForExpertContext,
-  replyToTestimonial,
-} from "@/src/services/testimonial.services";
+import { getTestimonials } from "@/src/services/job.services";
 
 type Props = {
   profile: IUserProfile;
@@ -42,29 +39,56 @@ export default function ExpertReviewsPanel({ profile }: Props) {
   const [replyTarget, setReplyTarget] = useState<ITestimonial | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  const expertId = profile?.expert?.id ?? null;
+  const expertId = profile?.recruiter?.id ?? null;
   const userId = profile?.id ?? null;
-  const expertName = profile?.expert?.fullName ?? "your expert";
+  const expertName = profile?.recruiter?.fullName ?? "your expert";
 
   const queryClient = useQueryClient();
 
   // ✅ FETCH REVIEWS (React Query owns data now)
-  const { data: reviews = [] } = useQuery({
+  const { data: allReviews = [] } = useQuery({
     queryKey: ["testimonials", expertId, userId],
-    queryFn: () => getTestimonialsForExpertContext([expertId, userId]),
-    enabled: Boolean(expertId || userId),
+    queryFn: async () => {
+      const testimonials = await getTestimonials();
+      // Only show reviews for this recruiter (expert)
+      return testimonials.filter((t) => t.userRole === "RECRUITER" && t.userId === expertId);
+    },
+    enabled: Boolean(expertId),
   });
+  // Map Testimonial[] to ITestimonial[]
+  const reviews: ITestimonial[] = allReviews.map((t: any) => ({
+    id: t.id,
+    rating: t.rating,
+    comment: t.comment || t.content || "",
+    candidateId: t.candidateId || "",
+    recruiterId: expertId || "",
+    reviewerName: t.reviewerName || t.user?.name || "",
+    reviewerImage: t.reviewerImage || t.user?.profilePhoto || "",
+    interviewId: t.interviewId || "",
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    recruiterReply: t.recruiterReply || t.reply || "",
+    repliedAt: t.repliedAt || "",
+    candidate: t.candidate || undefined,
+    recruiter: { id: expertId || '', fullName: expertName },
+    status: t.status,
+    isHidden: t.isHidden,
+    moderationStatus: t.moderationStatus,
+  }));
 
   // ✅ MUTATION
   const replyMutation = useMutation({
-    mutationFn: ({
-      id,
-      reply,
-    }: {
-      id: string;
-      reply: string;
-    }) => replyToTestimonial(id, { expertReply: reply }),
-
+    mutationFn: async ({ id, reply }: { id: string; reply: string }) => {
+      // PATCH /testimonials/:id with recruiterReply
+      return await fetch(`/api/testimonials/${id}/reply`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recruiterReply: reply }),
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to save reply");
+        return res.json();
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["testimonials", expertId, userId],
@@ -81,10 +105,10 @@ export default function ExpertReviewsPanel({ profile }: Props) {
   }, [reviews]);
 
   const getReviewerName = (r: ITestimonial) =>
-    r.client?.fullName || r.client?.user?.name || "Verified Client";
+    r.candidate?.fullName || r.reviewerName || "Verified Client";
 
   const getReviewerEmail = (r: ITestimonial) =>
-    r.client?.email || r.client?.user?.email || "";
+    r.candidate?.email || "";
 
   const handleCopy = async (r: ITestimonial) => {
     try {
@@ -106,7 +130,7 @@ export default function ExpertReviewsPanel({ profile }: Props) {
 
   const openReply = (r: ITestimonial) => {
     setReplyTarget(r);
-    setReplyText(r.expertReply || "");
+    setReplyText(r.recruiterReply || "");
   };
 
   const closeReply = () => {
