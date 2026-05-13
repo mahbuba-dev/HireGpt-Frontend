@@ -11,12 +11,18 @@ import {
   Phone,
   ShieldCheck,
   Users,
+  Sparkles,
 } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from "react-icons/fa6";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaYoutube,
+} from "react-icons/fa6";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -27,10 +33,9 @@ const quickLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-
 const platformLinks = [
   { label: "Post a Job", href: "/recruiter/post-job" },
-  { label: "Register as Candidate", href: "/register" },
+  { label: "Register", href: "/register" },
   { label: "Login", href: "/login" },
   { label: "Dashboard", href: "/dashboard" },
 ];
@@ -38,21 +43,45 @@ const platformLinks = [
 const legalLinks = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
-  { label: "Help & Support", href: "/help" },
+  { label: "Help Center", href: "/help" },
 ];
 
 const socialLinks = [
-  { name: "LinkedIn", icon: FaLinkedinIn, href: "https://www.linkedin.com/company/consultedge-global-/" },
-  { name: "Facebook", icon: FaFacebookF, href: "https://www.facebook.com/ConsultEdgeGlb/" },
-  { name: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/cegglobal/" },
-  { name: "YouTube", icon: FaYoutube, href: "https://www.youtube.com/@ConsultEdge.Global" },
+  {
+    name: "LinkedIn",
+    icon: FaLinkedinIn,
+    href: "#",
+  },
+  {
+    name: "Facebook",
+    icon: FaFacebookF,
+    href: "#",
+  },
+  {
+    name: "Instagram",
+    icon: FaInstagram,
+    href: "#",
+  },
+  {
+    name: "YouTube",
+    icon: FaYoutube,
+    href: "#",
+  },
 ];
 
-
 const trustSignals = [
-  { label: "Verified recruiters", icon: ShieldCheck },
-  { label: "Secure job applications", icon: CalendarRange },
-  { label: "Candidate-first experience", icon: Users },
+  {
+    label: "Verified recruiters",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Secure applications",
+    icon: CalendarRange,
+  },
+  {
+    label: "Candidate-first platform",
+    icon: Users,
+  },
 ];
 
 export default function Footer() {
@@ -60,246 +89,359 @@ export default function Footer() {
 
   useEffect(() => {
     const el = footerRef.current;
+
     if (!el) return;
 
     el.classList.add("opacity-0", "translate-y-8");
 
     const onScroll = () => {
       const rect = el.getBoundingClientRect();
+
       if (rect.top < window.innerHeight - 80) {
         el.classList.add("footer-fade-up");
+
         el.classList.remove("opacity-0", "translate-y-8");
+
         window.removeEventListener("scroll", onScroll);
       }
     };
 
     window.addEventListener("scroll", onScroll);
+
     onScroll();
 
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 text-slate-200 section-spacing">
+    <footer className="relative">
+      {/* PREMIUM BACKGROUND */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Main Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(100,13,95,0.22),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(235,91,0,0.14),transparent_30%)]" />
+
+        {/* Glow */}
+        <div className="absolute left-1/2 top-0  -translate-x-1/2 rounded-full bg-[#640D5F]/20 blur-[120px]" />
+
+        <div className="absolute bottom-0 right-0 h-[300px] w-[300px] rounded-full bg-[#EB5B00]/10 blur-[120px]" />
+
+        {/* Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:80px_80px] opacity-[0.04]" />
+
+        {/* Noise */}
+        <div className="absolute inset-0 bg-[url('/ambient/noise.png')] opacity-[0.03]" />
+      </div>
+
       <style>{`
         .footer-fade-up {
-          transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
+          transition:
+            opacity 0.5s cubic-bezier(.4,0,.2,1),
+            transform 0.5s cubic-bezier(.4,0,.2,1);
+
           opacity: 1 !important;
           transform: translateY(0) !important;
         }
+
         .footer-social-anim {
-          transition: transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s;
+          transition:
+            transform 0.3s ease,
+            border-color 0.3s ease,
+            background 0.3s ease,
+            box-shadow 0.3s ease;
         }
+
         .footer-social-anim:hover {
-          transform: rotate(5deg) scale(1.05);
-          box-shadow: 0 0 0 4px rgba(34,211,238,0.25);
-          border-color: #06b6d4;
+          transform: translateY(-4px);
+
+          border-color: rgba(255,204,0,0.25);
+
+          background: rgba(255,255,255,0.08);
+
+          box-shadow:
+            0 10px 30px rgba(235,91,0,0.15),
+            0 0 0 4px rgba(255,204,0,0.05);
         }
+
         .footer-ink-link {
           position: relative;
-          display: inline-block;
-          overflow: hidden;
+          width: fit-content;
+          transition: color 0.3s ease;
         }
+
         .footer-ink-link::after {
           content: "";
+
           position: absolute;
           left: 0;
-          bottom: 0.5px;
-          height: 2px;
+          bottom: -3px;
+
+          height: 1.5px;
           width: 100%;
-          background: linear-gradient(90deg, #2563eb 0%, #06b6d4 100%);
-          opacity: 0.8;
+
           transform: scaleX(0);
           transform-origin: left;
-          transition: transform 0.25s ease-out;
+
+          transition: transform 0.3s ease;
+
+          background: linear-gradient(
+            90deg,
+            #FFCC00,
+            #EB5B00
+          );
         }
+
         .footer-ink-link:hover::after {
           transform: scaleX(1);
         }
+
+        .glass-footer-card {
+          background: rgba(255,255,255,0.04);
+
+          backdrop-filter: blur(24px);
+
+          border: 1px solid rgba(255,255,255,0.08);
+
+          box-shadow:
+            0 10px 40px rgba(0,0,0,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+        }
       `}</style>
 
-      <div ref={footerRef} className="page-container">
+      <div ref={footerRef} className="relative z-10">
         {/* CTA SECTION */}
-        <div className="glass-card relative overflow-hidden section-spacing p-6 md:p-8 lg:p-10">
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-4">
+        <div className="page-container pt-10">
+          <div className="glass-footer-card relative overflow-hidden rounded-[32px] p-6 md:p-8 lg:p-10">
+            {/* Glow */}
+            <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-[#EB5B00]/10 blur-3xl" />
 
-              <Badge className="border-white/15 bg-white/10 text-white premium-card">
-                <Gem className="mr-1 size-3.5" />
-                Ready to get hired or hire?
-              </Badge>
+            <div className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#640D5F] via-[#EB5B00] to-[#FFCC00]" />
+
+            <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+              {/* LEFT */}
+              <div className="space-y-5">
+                <Badge className="border-white/10 bg-white/[0.06] text-white backdrop-blur-xl">
+                  <Sparkles className="mr-1 size-3.5 text-[#FFCC00]" />
+                  AI-Powered Recruitment Platform
+                </Badge>
+
+                <div>
+                  <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl">
+                  Find top talent or discover your next career opportunity with 
+                    <span className="bg-gradient-to-r from-[#FFCC00] via-[#EB5B00] to-[#B12C00] bg-clip-text text-transparent">
+                      {" "}
+                    HireGPT.
+                    </span>
+                  </h2>
+
+                  <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 md:text-base">
+                    Discover AI-powered recruitment workflows, premium
+                    candidate experiences, and modern hiring tools built for
+                    recruiters and job seekers.
+                  </p>
+                </div>
+
+                {/* TRUST */}
+                <div className="flex flex-wrap gap-2">
+                  {trustSignals.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-white/70 backdrop-blur-xl"
+                      >
+                        <Icon className="size-3.5 text-[#FFCC00]" />
+                        {item.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* BUTTONS */}
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  asChild
+                  className="h-11 rounded-full bg-white px-6 text-black transition-all hover:scale-[1.02] hover:bg-white/90"
+                >
+                  <Link href="/jobs">
+                    Browse Jobs
+                    <ArrowRight className="ml-2 size-4" />
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  className="h-11 rounded-full border border-white/10 bg-white/[0.05] px-6 text-white backdrop-blur-xl transition-all hover:bg-white/[0.08]"
+                >
+                  <Link href="/recruiter/post-job">
+                    Post a Job
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN FOOTER */}
+        <div className="page-container grid gap-5 pt-15 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.7fr_1fr]">
+          {/* BRAND */}
+          <div className="space-y-5">
+            <Link href="/" className="inline-flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-xl">
+                <Gem className="size-5 text-[#FFCC00]" />
+              </div>
 
               <div>
-                <h2 className="h2 text-white">
-                  Find your next job or top talent with HireGPT.
-                </h2>
-                <p className="max-w-2xl text-base muted">
-                  Discover AI-matched jobs and recruiters, apply with confidence, and let HireGPT power your career journey.
+                <h3 className="text-lg font-semibold text-white">
+                  HireGPT
+                </h3>
+
+                <p className="text-xs text-white/50">
+                  AI Recruitment Platform
                 </p>
               </div>
+            </Link>
 
-              <div className="flex flex-wrap gap-2">
-                {trustSignals.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.label}
-                      className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-slate-100"
-                    >
-                      <Icon className="size-3.5 text-cyan-200" />
-                      {item.label}
-                    </div>
-                  );
-                })}
+            <p className="max-w-sm text-sm leading-relaxed text-white/60">
+              HireGPT helps recruiters and candidates connect faster through
+              intelligent AI-powered hiring workflows and premium recruitment
+              experiences.
+            </p>
+
+            {/* SOCIAL */}
+            <div className="flex gap-2">
+              {socialLinks.map((s) => {
+                const Icon = s.icon;
+
+                return (
+                  <a
+                    key={s.name}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={s.name}
+                    className="footer-social-anim flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl"
+                  >
+                    <Icon className="size-4" />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* QUICK LINKS */}
+          <div>
+            <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Quick Links
+            </h3>
+
+            <div className="flex flex-col gap-3">
+              {quickLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="footer-ink-link text-sm text-white/70 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* PLATFORM */}
+          <div>
+            <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Platform
+            </h3>
+
+            <div className="flex flex-col gap-3">
+              {platformLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="footer-ink-link text-sm text-white/70 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* LEGAL */}
+          <div>
+            <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Legal
+            </h3>
+
+            <div className="flex flex-col gap-3">
+              {legalLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="footer-ink-link text-sm text-white/70 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTACT */}
+          <div>
+            <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Contact
+            </h3>
+
+            <div className="space-y-4 text-sm text-white/60">
+              <div className="flex items-center gap-3">
+                <Mail className="size-4 text-[#FFCC00]" />
+                support@hiregpt.ai
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Phone className="size-4 text-[#FFCC00]" />
+                +1 (555) 123-4567
+              </div>
+
+              <div className="flex items-center gap-3">
+                <MapPin className="size-4 text-[#FFCC00]" />
+                Global AI-powered hiring support
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+        {/* BOTTOM BAR */}
+        
+          <div className="page-container flex flex-col items-center justify-between gap-3 py-5 text-sm text-white/40 md:flex-row">
+            <p>
+              © {new Date().getFullYear()} HireGPT. All rights reserved.
+            </p>
 
-              <Button asChild className="h-11 w-full rounded-full bg-white px-5 text-slate-900 hover:bg-white/90 sm:w-44">
-                <Link href="/jobs">
-                  Browse jobs <ArrowRight className="ml-1.5 size-3.5" />
-                </Link>
-              </Button>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href="/about" className="hover:text-white">
+                About
+              </Link>
 
-              <Button asChild className="h-11 w-full rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400 px-5 text-white shadow-lg shadow-cyan-500/30 transition-all hover:from-blue-700 hover:via-cyan-600 hover:to-teal-500 hover:shadow-xl hover:shadow-cyan-500/40 sm:w-44">
-                <Link href="/contact">Contact us</Link>
-              </Button>
+              <Link href="/privacy" className="hover:text-white">
+                Privacy
+              </Link>
+
+              <Link href="/terms" className="hover:text-white">
+                Terms
+              </Link>
+
+              <Link href="/help" className="hover:text-white">
+                Help
+              </Link>
+
+              <Link href="/contact" className="hover:text-white">
+                Contact
+              </Link>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* MAIN FOOTER */}
-      <div className="page-container mt-2 grid w-full items-start gap-10 section-padding md:grid-cols-[1.1fr_0.65fr_0.65fr_0.65fr_1fr]">
-
-        {/* BRAND */}
-        <div className="space-y-5 pl-0">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white">
-              <Gem className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-white">HireGPT</p>
-              <p className="text-xs text-slate-400">AI-powered hiring & job search</p>
-            </div>
-          </Link>
-
-
-          <p className="text-base muted">
-            The modern AI platform connecting candidates and recruiters for smarter hiring and career growth.
-          </p>
-
-          <div className="flex gap-2">
-            {socialLinks.map((s) => {
-              const Icon = s.icon;
-              return (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={s.name}
-                  className="footer-social-anim flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200"
-                >
-                  <Icon className="size-4" />
-                </a>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* QUICK LINKS (FIXED ALIGNMENT) */}
-        <div>
-          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
-            Quick links
-          </h3>
-
-          <div className="flex flex-col gap-3 text-base">
-            {quickLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="footer-ink-link text-slate-300 hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* PLATFORM (FIXED ALIGNMENT) */}
-        <div>
-          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
-            Platform
-          </h3>
-
-          <div className="flex flex-col gap-3 text-base">
-            {platformLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="footer-ink-link text-slate-300 hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* LEGAL */}
-        <div>
-          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
-            Legal
-          </h3>
-
-          <div className="flex flex-col gap-3 text-base">
-            {legalLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="footer-ink-link text-slate-300 hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* CONTACT */}
-        <div>
-          <h3 className="mb-4 h4 uppercase tracking-[0.2em] muted">
-            Contact
-          </h3>
-          <div className="space-y-4 text-base muted">
-          <div className="flex items-center gap-2">
-            <Mail className="size-4 shrink-0" />
-            support@hiregpt.ai
-          </div>
-          <div className="flex items-center gap-2">
-            <Phone className="size-4 shrink-0" />
-            +1 (555) 123-4567
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="size-4 shrink-0" />
-            Global AI-powered hiring support
-          </div>
-          </div>
-        </div>
-      </div>
-
-      {/* BOTTOM BAR */}
-      <div className="border-t border-white/10">
-        <div className="page-container flex flex-col items-center justify-between gap-2 py-4 text-base muted md:flex-row">
-          <p>© {new Date().getFullYear()} HireGPT</p>
-          <div className="flex gap-4">
-            <Link href="/about" className="hover:text-white">About</Link>
-            <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/terms" className="hover:text-white">Terms</Link>
-            <Link href="/help" className="hover:text-white">Help</Link>
-            <Link href="/contact" className="hover:text-white">Contact</Link>
-          </div>
-        </div>
+        
       </div>
     </footer>
   );

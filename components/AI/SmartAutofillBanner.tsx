@@ -57,7 +57,14 @@ export default function SmartAutofillBanner({
 
   const handleApply = () => {
     const payload: Partial<AutofillProfile> = {};
-    for (const f of available) payload[f] = profile[f];
+
+    for (const f of available) {
+      const value = profile[f];
+      if (typeof value === "string") {
+        (payload as any)[f] = value;
+      }
+    }
+
     onApply(payload);
     setApplied(true);
   };

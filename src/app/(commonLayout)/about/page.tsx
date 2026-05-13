@@ -112,16 +112,7 @@ const aiFeatures = [
     title: "Trending analysis",
     description: "Platform-wide activity signals surface trending experts and emerging industries in real time.",
   },
-  {
-    icon: Layers,
-    title: "Content suggestions",
-    description: "AI-curated playbooks and insights arrive tailored to your industry focus and recent searches.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Predictive booking nudges",
-    description: "The platform anticipates your next need and surfaces relevant offers and availability proactively.",
-  },
+ 
 ];
 
 const teamMembers = [
@@ -157,235 +148,345 @@ const teamMembers = [
 
 export default function AboutPage() {
   return (
-    <main className="relative overflow-hidden pb-20 pt-4">
-      {/* background glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-200 bg-[radial-gradient(circle_at_10%_10%,rgba(37,99,235,0.14),transparent_40%),radial-gradient(circle_at_90%_14%,rgba(34,211,238,0.14),transparent_40%)]"
-      />
+ <main className="relative overflow-hidden pb-20 pt-4">
+  {/* PREMIUM BACKGROUND */}
+  <div className="absolute inset-0 -z-10 overflow-hidden">
 
-      <div className="mx-auto max-w-6xl space-y-24 px-4 md:px-6">
-        {/* ── HERO ─────────────────────────────────────── */}
-        <section className="relative overflow-hidden rounded-[2.2rem] border border-blue-200/50 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-950 px-8 py-14 text-center text-white shadow-[0_40px_100px_-30px_rgba(34,211,238,0.4)] md:px-16 md:py-20 dark:border-white/10">
-          <div aria-hidden className="pointer-events-none absolute -left-28 -top-28 size-96 rounded-full bg-blue-500/25 blur-[120px]" />
-          <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-20 size-80 rounded-full bg-cyan-400/25 blur-[100px]" />
+    {/* glow orbs */}
+    <div className="absolute left-[-10%] top-[-10%] h-[520px] w-[520px] rounded-full bg-[#640D5F]/25 blur-[150px]" />
 
-          <div className="relative mx-auto max-w-3xl space-y-6">
-            <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
-              <Sparkles className="mr-1.5 size-3.5" />
-              Our story
-            </Badge>
+    <div className="absolute right-[-10%] top-[10%] h-[480px] w-[480px] rounded-full bg-[#EB5B00]/20 blur-[140px]" />
 
-            <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl lg:text-4xl">
-              Expert advice,{" "}
-              <span className="bg-linear-to-r from-cyan-300 via-sky-300 to-blue-300 bg-clip-text text-transparent">
-                intelligently delivered
-              </span>
-            </h1>
+    <div className="absolute bottom-[-10%] left-[30%] h-[420px] w-[420px] rounded-full bg-[#FFCC00]/10 blur-[130px]" />
 
-            <p className="mx-auto max-w-2xl text-base text-white/75 md:text-lg">
-              ConsultEdge is the AI-powered consultation marketplace that connects ambitious teams with
-              verified experts — making high-quality advisory accessible, fast, and personal.
-            </p>
+    {/* grid */}
+    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:70px_70px] opacity-[0.04]" />
+  </div>
 
-            <div className="flex flex-wrap justify-center gap-3 pt-2">
-              <Button asChild className="h-11 rounded-full bg-white px-6 text-slate-900 font-semibold hover:bg-white/90">
-                <Link href="/experts">
-                  Browse experts <ArrowRight className="ml-2 size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-11 rounded-full border-white/20 bg-white/10 px-6 text-white hover:bg-white/15">
-                <Link href="/contact">Get in touch</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
+  <div className="mx-auto max-w-7xl space-y-24 px-4 md:px-6">
 
-        {/* ── STATS ─────────────────────────────────────── */}
-        <section>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-blue-100/60 bg-linear-to-br from-blue-50/80 to-cyan-50/60 p-6 text-center shadow-sm dark:border-white/10 dark:from-slate-900/80 dark:to-slate-800/60"
-              >
-                <span className="text-3xl font-extrabold tracking-tight text-blue-700 dark:text-cyan-300 md:text-4xl">
-                  {stat.value}
-                </span>
-                <span className="text-xs font-medium text-muted-foreground md:text-sm">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+    {/* ───────────────── HERO ───────────────── */}
+    <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/[0.04] px-8 py-16 backdrop-blur-3xl md:px-14 md:py-20">
 
-        {/* ── MISSION ─────────────────────────────────────── */}
-        <section className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-5">
-            <Badge variant="secondary" className="gap-1.5 bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
-              <Target className="size-3.5" />
-              Our mission
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Making great advice accessible to every team
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              For too long, access to senior expert guidance has been limited to large enterprises with big
-              advisory budgets. ConsultEdge changes that. By building an AI-first marketplace, we've made
-              it possible for any team — a two-person startup or a 200-person scaleup — to get the exact
-              expertise they need, when they need it.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              Every feature we build serves one goal: to reduce the distance between a question and the
-              expert who can answer it best.
-            </p>
-            <Button asChild className="h-11 rounded-full bg-blue-600 px-6 text-white hover:bg-blue-700">
-              <Link href="/how-it-works">
-                See how it works <ArrowRight className="ml-2 size-4" />
-              </Link>
-            </Button>
-          </div>
+      {/* glow */}
+      <div className="absolute inset-0">
+        <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[#640D5F]/30 blur-[100px]" />
 
-          <div className="grid grid-cols-2 gap-4">
-            {values.map((v) => {
-              const Icon = v.icon;
-              return (
-                <Card key={v.title} className="border-border/70 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="space-y-3 p-5">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${v.color} text-white shadow-lg`}>
-                      <Icon className="size-5" />
-                    </div>
-                    <h3 className="font-semibold">{v.title}</h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">{v.description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
+        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[#EB5B00]/20 blur-[100px]" />
 
-        {/* ── AI FEATURES ─────────────────────────────────────── */}
-        <section className="rounded-[2rem] border border-blue-200/50 bg-linear-to-br from-blue-50/60 via-background to-cyan-50/40 p-8 dark:border-white/10 dark:from-slate-950 dark:via-[#071326] dark:to-slate-950 md:p-12">
-          <div className="mb-10 text-center">
-            <Badge variant="secondary" className="mb-3 gap-1.5 bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
-              <BrainCircuit className="size-3.5" />
-              AI-powered platform
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Intelligence built into every interaction
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-              ConsultEdge uses AI throughout the platform — from the moment you search to the moment you
-              book — to save time and surface better matches.
-            </p>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {aiFeatures.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={feature.title}
-                  className="flex gap-4 rounded-2xl border border-blue-100/70 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/50"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                    <Icon className="size-4.5" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-semibold">{feature.title}</h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">{feature.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── TIMELINE ─────────────────────────────────────── */}
-        <section>
-          <div className="mb-10 text-center">
-            <Badge variant="secondary" className="mb-3 gap-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
-              <Star className="size-3.5" />
-              Our journey
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight">Built with purpose, milestone by milestone</h2>
-          </div>
-
-          <div className="relative">
-            <div className="absolute left-6 top-0 bottom-0 w-px bg-linear-to-b from-blue-400 via-cyan-400 to-transparent opacity-30 md:left-1/2" />
-            <div className="space-y-8">
-              {milestones.map((m, i) => (
-                <div
-                  key={m.year}
-                  className={`relative flex gap-6 md:w-[46%] ${i % 2 === 0 ? "md:ml-0" : "md:ml-auto md:flex-row-reverse"}`}
-                >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-blue-400/50 bg-blue-600 text-xs font-bold text-white">
-                    {m.year.slice(2)}
-                  </div>
-                  <div className="flex-1 rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm">
-                    <div className="mb-1 text-xs font-semibold text-blue-600 dark:text-blue-400">{m.year}</div>
-                    <h3 className="font-semibold">{m.title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{m.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── TEAM ─────────────────────────────────────── */}
-        <section>
-          <div className="mb-10 text-center">
-            <Badge variant="secondary" className="mb-3 gap-1.5 bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-200">
-              <Users className="size-3.5" />
-              Leadership team
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight">The people building ConsultEdge</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-              A small, focused team with deep expertise in consulting, AI, and product — obsessed with
-              making advisory radically more accessible.
-            </p>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {teamMembers.map((member) => (
-              <Card key={member.name} className="border-border/70 text-center">
-                <CardContent className="space-y-3 pt-6">
-                  <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br ${member.accent} text-xl font-bold text-white shadow-lg`}>
-                    {member.initials}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{member.name}</h3>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{member.role}</p>
-                  </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{member.bio}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* ── CTA ─────────────────────────────────────── */}
-        <section className="relative overflow-hidden rounded-[2rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-10 text-center text-white shadow-[0_30px_80px_-24px_rgba(34,211,238,0.35)] md:p-14">
-          <div aria-hidden className="pointer-events-none absolute -left-20 top-0 size-72 rounded-full bg-blue-500/20 blur-[100px]" />
-          <div aria-hidden className="pointer-events-none absolute -right-16 bottom-0 size-64 rounded-full bg-cyan-400/20 blur-[90px]" />
-          <div className="relative mx-auto max-w-2xl space-y-5">
-            <h2 className="text-3xl font-bold md:text-4xl">Ready to find your expert?</h2>
-            <p className="text-sm text-white/70 md:text-base">
-              Browse hundreds of verified specialists and book your first session today.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button asChild className="h-11 rounded-full bg-white px-6 text-slate-900 font-semibold hover:bg-white/90">
-                <Link href="/experts">
-                  Explore experts <ArrowRight className="ml-2 size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-11 rounded-full border-white/20 bg-white/10 px-6 text-white hover:bg-white/15">
-                <Link href="/contact">Contact us</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),transparent_40%)]" />
       </div>
-    </main>
+
+      {/* top line */}
+      <div className="absolute left-0 top-0 h-[3px] w-full bg-gradient-to-r from-[#640D5F] via-[#EB5B00] to-[#FFCC00]" />
+
+      <div className="relative mx-auto max-w-4xl text-center">
+
+        <Badge className="mb-5 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[#FFCC00] backdrop-blur-xl hover:bg-white/[0.08]">
+          <Sparkles className="mr-2 size-3.5" />
+          About HireGPT
+        </Badge>
+
+        <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-6xl">
+          Building the Future of
+          <span className="bg-gradient-to-r from-[#FFCC00] via-[#EB5B00] to-[#640D5F] bg-clip-text text-transparent">
+            {" "}
+            AI Recruitment
+          </span>
+        </h1>
+
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/60 md:text-lg">
+          HireGPT helps modern companies discover, evaluate, and hire top talent faster using intelligent AI-powered recruitment workflows.
+        </p>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+
+          <Button
+            asChild
+            className="h-11 rounded-2xl bg-gradient-to-r from-[#640D5F] via-[#B12C00] to-[#EB5B00] px-6 text-sm font-semibold text-white shadow-lg shadow-[#EB5B00]/20 transition-all duration-300 hover:scale-[1.03]"
+          >
+            <Link href="/jobs">
+              Explore Jobs
+              <ArrowRight className="ml-2 size-4" />
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="h-11 rounded-2xl border border-white/10 bg-white/[0.04] px-6 text-sm text-white backdrop-blur-xl hover:bg-white/[0.08]"
+          >
+            <Link href="/contact">
+              Contact Us
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+
+
+
+
+
+    {/* ───────────────── STATS ───────────────── */}
+    <section>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/[0.06]"
+          >
+
+            <div className="absolute inset-0">
+              <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-[#EB5B00]/10 blur-3xl transition-all duration-500 group-hover:scale-125" />
+            </div>
+
+            <div className="relative z-10 text-center">
+
+              <h3 className="text-3xl font-black text-white md:text-4xl">
+                {stat.value}
+              </h3>
+
+              <p className="mt-2 text-sm text-white/50">
+                {stat.label}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+
+
+
+
+    {/* ───────────────── MISSION SECTION ───────────────── */}
+    <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-[#0B0B12]/70 p-8 backdrop-blur-3xl md:p-14">
+
+      {/* background glow */}
+      <div className="absolute inset-0">
+        <div className="absolute left-[-10%] top-0 h-[320px] w-[320px] rounded-full bg-[#640D5F]/25 blur-[120px]" />
+
+        <div className="absolute bottom-0 right-[-10%] h-[320px] w-[320px] rounded-full bg-[#EB5B00]/20 blur-[120px]" />
+
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_40%)]" />
+      </div>
+
+      {/* top line */}
+      <div className="absolute left-0 top-0 h-[3px] w-full bg-gradient-to-r from-[#640D5F] via-[#EB5B00] to-[#FFCC00]" />
+
+      <div className="relative z-10 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+
+        {/* LEFT */}
+        <div>
+
+          <Badge className="mb-5 rounded-full border border-[#EB5B00]/20 bg-[#EB5B00]/10 px-4 py-1.5 text-[#FFCC00] backdrop-blur-xl">
+            <Target className="mr-2 size-3.5" />
+            Our Mission
+          </Badge>
+
+          <h2 className="max-w-2xl text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
+            Reinventing
+            <span className="bg-gradient-to-r from-[#FFCC00] via-[#EB5B00] to-[#640D5F] bg-clip-text text-transparent">
+              {" "}
+              AI-powered hiring
+            </span>
+          </h2>
+
+          <p className="mt-6 max-w-2xl text-base leading-8 text-white/60">
+            HireGPT combines semantic intelligence, automation, and premium UX
+            to create a modern recruitment experience for both recruiters and candidates.
+          </p>
+
+          <p className="mt-4 max-w-2xl text-base leading-8 text-white/60">
+            From resume intelligence to smart matching and recruiter analytics,
+            every workflow is designed to reduce friction and accelerate hiring.
+          </p>
+
+          {/* FEATURE POINTS */}
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+
+            <div className="group rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.06]">
+
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#640D5F] via-[#B12C00] to-[#EB5B00] shadow-lg shadow-[#EB5B00]/20">
+                <BrainCircuit className="size-5 text-white" />
+              </div>
+
+              <h4 className="text-base font-bold text-white">
+                Intelligent Matching
+              </h4>
+
+              <p className="mt-2 text-sm leading-7 text-white/55">
+                AI-driven semantic matching between recruiters and top talent.
+              </p>
+            </div>
+
+            <div className="group rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.06]">
+
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#EB5B00] to-[#FFCC00] shadow-lg shadow-[#FFCC00]/10">
+                <Zap className="size-5 text-white" />
+              </div>
+
+              <h4 className="text-base font-bold text-white">
+                Faster Hiring
+              </h4>
+
+              <p className="mt-2 text-sm leading-7 text-white/55">
+                Automated workflows reduce delays and streamline recruitment.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT VISUAL */}
+        <div className="relative">
+
+          <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/30 p-6 backdrop-blur-2xl">
+
+            {/* glow */}
+            <div className="absolute inset-0">
+              <div className="absolute left-0 top-0 h-32 w-32 rounded-full bg-[#640D5F]/20 blur-3xl" />
+
+              <div className="absolute bottom-0 right-0 h-32 w-32 rounded-full bg-[#EB5B00]/20 blur-3xl" />
+            </div>
+
+            <div className="relative z-10 space-y-5">
+
+              {/* main stat */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+
+                <div className="mb-5 flex items-center justify-between">
+
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+                      AI Match Accuracy
+                    </p>
+
+                    <h3 className="mt-2 text-4xl font-black text-white">
+                      98%
+                    </h3>
+                  </div>
+
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#640D5F] via-[#B12C00] to-[#EB5B00] shadow-lg shadow-[#EB5B00]/20">
+                    <LineChart className="size-6 text-white" />
+                  </div>
+                </div>
+
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full w-[98%] rounded-full bg-gradient-to-r from-[#640D5F] via-[#EB5B00] to-[#FFCC00]" />
+                </div>
+              </div>
+
+              {/* mini stats */}
+              <div className="grid grid-cols-2 gap-4">
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                  <Users className="mb-3 size-5 text-[#FFCC00]" />
+
+                  <h4 className="text-3xl font-black text-white">
+                    12k+
+                  </h4>
+
+                  <p className="mt-1 text-xs text-white/50">
+                    Active Candidates
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                  <Layers className="mb-3 size-5 text-[#FFCC00]" />
+
+                  <h4 className="text-3xl font-black text-white">
+                    5k+
+                  </h4>
+
+                  <p className="mt-1 text-xs text-white/50">
+                    Open Positions
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+
+
+    {/* ───────────────── AI FEATURES ───────────────── */}
+    <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-[#0B0B12]/70 p-8 backdrop-blur-3xl md:p-12">
+
+      {/* background */}
+      <div className="absolute inset-0">
+        <div className="absolute left-0 top-0 h-[300px] w-[300px] rounded-full bg-[#640D5F]/20 blur-[120px]" />
+
+        <div className="absolute bottom-0 right-0 h-[300px] w-[300px] rounded-full bg-[#EB5B00]/15 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10">
+
+        {/* heading */}
+        <div className="mb-14 text-center">
+
+          <Badge className="mb-5 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[#FFCC00] backdrop-blur-xl">
+            <BrainCircuit className="mr-2 size-3.5" />
+            AI Features
+          </Badge>
+
+          <h2 className="text-4xl font-black tracking-tight text-white md:text-5xl">
+            Intelligence embedded into
+            <span className="bg-gradient-to-r from-[#FFCC00] via-[#EB5B00] to-[#640D5F] bg-clip-text text-transparent">
+              {" "}
+              every workflow
+            </span>
+          </h2>
+
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/55">
+            Advanced AI tools helping recruiters hire faster and candidates discover better opportunities.
+          </p>
+        </div>
+
+        {/* 4 cards row */}
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+          {aiFeatures.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <div
+                key={feature.title}
+                className="group relative overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#EB5B00]/20 hover:bg-white/[0.06]"
+              >
+
+                {/* glow */}
+                <div className="absolute inset-0">
+                  <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-[#EB5B00]/10 blur-3xl transition-all duration-500 group-hover:scale-125" />
+                </div>
+
+                <div className="relative z-10">
+
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#640D5F] via-[#B12C00] to-[#EB5B00] shadow-lg shadow-[#EB5B00]/20">
+                    <Icon className="size-5 text-white" />
+                  </div>
+
+                  <h3 className="text-lg font-bold text-white">
+                    {feature.title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7 text-white/55">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
   );
 }

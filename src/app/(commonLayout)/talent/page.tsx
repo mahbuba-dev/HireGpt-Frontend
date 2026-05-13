@@ -1,31 +1,37 @@
-
-
 "use client";
-import { getAllCandidates, ICandidate, UserSummary } from "@/src/services/candidate.service";
+
+import {
+  getAllCandidates,
+  ICandidate,
+} from "@/src/services/candidate.service";
+
 import { useEffect, useState } from "react";
+
+import Link from "next/link";
+
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  MapPin,
+  Sparkles,
+  Users,
+  BrainCircuit,
+} from "lucide-react";
 
 export default function TalentPage() {
   const [candidates, setCandidates] = useState<ICandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const LIMIT = 12;
 
-  // Initial load
   useEffect(() => {
     (async () => {
       setLoading(true);
       setError(null);
+
       try {
         const res = await getAllCandidates();
-        console.log("[TalentPage] API response (initial):", res);
-        console.log("[TalentPage] meta:", res.meta);
-        console.log("[TalentPage] candidates:", res.data);
-        setCandidates(res.data);
-        setHasMore(false); // No pagination, so no more data
-        setPage(1);
+
+        setCandidates(res.data || []);
       } catch (err: any) {
         setError("Failed to load talent profiles.");
       } finally {
@@ -34,103 +40,229 @@ export default function TalentPage() {
     })();
   }, []);
 
-  // Load more handler
-  const handleLoadMore = async () => {
-    setLoadingMore(true);
-    setError(null);
-    try {
-      const res = await getAllCandidates();
-      console.log("[TalentPage] API response (load more):", res);
-      console.log("[TalentPage] meta (load more):", res.meta);
-      console.log("[TalentPage] candidates (load more):", res.data);
-      setCandidates((prev) => [...prev, ...res.data]);
-      setHasMore(false); // No pagination, so no more data
-    } catch (err: any) {
-      setError("Failed to load more talent profiles.");
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-linear-to-br from-white via-pink-50 to-pink-100 flex flex-col items-center justify-start py-16 px-4">
-      <section className="w-full max-w-4xl bg-white/90 rounded-3xl shadow-2xl p-10 border border-pink-100">
-        <h1 className="text-4xl font-extrabold text-pink-900 mb-4 text-center tracking-tight">Browse Top Talent</h1>
-        <p className="text-lg text-gray-700 mb-8 text-center max-w-2xl mx-auto">
-          Discover and connect with industry-leading professionals ready to make an impact. Our curated talent pool features SaaS experts, engineers, designers, and more—each profile is handpicked for quality and experience.
-        </p>
-        {loading ? (
-          <div className="text-center text-pink-700 py-10">Loading talent profiles...</div>
-        ) : error ? (
-          <div className="text-center text-red-500 py-10">{error}</div>
-        ) : Array.isArray(candidates) && candidates.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {candidates.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  className="bg-white/95 border border-pink-100 rounded-3xl shadow-xl p-6 flex flex-col items-center hover:shadow-2xl transition-shadow duration-200 group"
-                >
-                  <div className="relative mb-4">
-                    <img
-                      src={candidate.profilePhoto || (candidate.user && candidate.user.image) || "/industry-icons/engineer.svg"}
-                      alt={candidate.fullName}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-pink-200 shadow group-hover:scale-105 transition-transform duration-200 bg-white"
-                    />
-                    <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></span>
-                  </div>
-                  <h2 className="text-lg font-bold text-pink-900 text-center mb-1 truncate w-full" title={candidate.fullName}>{candidate.fullName}</h2>
-                  <p className="text-pink-700 text-xs font-medium mb-1 text-center">{candidate.headline || (candidate.user && candidate.user.role) || "Professional"}</p>
-                  <p className="text-gray-500 text-xs mb-2 text-center w-full truncate" title={candidate.email}>{candidate.email}</p>
-                  <div className="flex flex-wrap justify-center gap-2 mb-3 min-h-[28px]">
-                    {candidate.skills && candidate.skills.length > 0 ? (
-                      candidate.skills.slice(0, 4).map((skill) => (
-                        <span key={skill} className="bg-pink-100 text-pink-700 px-2 py-1 rounded-full text-xs font-semibold shadow-sm">
-                          {skill}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-300 text-xs italic">No skills listed</span>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2 w-full mt-auto">
-                    <a
-                      href={"/talent/" + candidate.id}
-                      className="inline-block w-full text-center bg-gradient-to-r from-pink-600 to-pink-400 hover:from-pink-700 hover:to-pink-500 text-white font-bold py-2 rounded-2xl shadow-md transition-all duration-200"
-                    >
-                      View Profile
-                    </a>
-                  </div>
+    <main className="relative overflow-hidden pb-20 pt-6">
+      {/* PREMIUM BACKGROUND */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        {/* glow orbs */}
+        <div className="absolute left-[-10%] top-[-10%] h-[520px] w-[520px] rounded-full bg-[#640D5F]/25 blur-[140px]" />
+
+        <div className="absolute right-[-10%] top-[10%] h-[460px] w-[460px] rounded-full bg-[#EB5B00]/20 blur-[140px]" />
+
+        <div className="absolute bottom-[-10%] left-[30%] h-[420px] w-[420px] rounded-full bg-[#FFCC00]/10 blur-[120px]" />
+
+        {/* grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:70px_70px] opacity-[0.04]" />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-[38px] border border-white/10 bg-[#0B0B12]/85 p-6 backdrop-blur-3xl md:p-10">
+          {/* glow */}
+          <div className="absolute inset-0">
+            <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[#640D5F]/25 blur-[120px]" />
+
+            <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[#EB5B00]/20 blur-[120px]" />
+
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.07),transparent_40%)]" />
+          </div>
+
+          {/* top line */}
+          <div className="absolute left-0 top-0 h-[3px] w-full bg-gradient-to-r from-[#640D5F] via-[#EB5B00] to-[#FFCC00]" />
+
+          <div className="relative z-10">
+            {/* TOP */}
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs font-semibold text-[#FFCC00] backdrop-blur-xl">
+                  <Sparkles className="size-3.5" />
+                  Premium Talent Network
                 </div>
-              ))}
+
+                <h1 className="max-w-3xl text-3xl font-black leading-tight tracking-tight text-white md:text-5xl">
+                  Discover world-class
+                  <span className="bg-gradient-to-r from-[#FFCC00] via-[#EB5B00] to-[#640D5F] bg-clip-text text-transparent">
+                    {" "}
+                    AI-ready talent
+                  </span>
+                </h1>
+
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-white/60 md:text-base">
+                  Explore premium candidate profiles, verified technical
+                  expertise, and modern professionals ready to join innovative
+                  companies.
+                </p>
+              </div>
+
+              {/* stats */}
+              <div className="grid grid-cols-2 gap-4 lg:w-[320px]">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-2xl">
+                  <Users className="mb-3 size-5 text-[#FFCC00]" />
+
+                  <h3 className="text-2xl font-black text-white">
+                    {candidates.length}+
+                  </h3>
+
+                  <p className="text-xs text-white/50">
+                    Active Candidates
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-2xl">
+                  <BrainCircuit className="mb-3 size-5 text-[#FFCC00]" />
+
+                  <h3 className="text-2xl font-black text-white">
+                    AI Matched
+                  </h3>
+
+                  <p className="text-xs text-white/50">
+                    Smart Recommendations
+                  </p>
+                </div>
+              </div>
             </div>
-            {hasMore && (
-              <div className="flex justify-center mt-8">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 px-8 rounded-full shadow-lg transition-all duration-200 disabled:opacity-60"
-                >
-                  {loadingMore ? "Loading..." : "Load More"}
-                </button>
+
+            {/* ERROR */}
+            {error && (
+              <div className="mt-10 rounded-3xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-300">
+                {error}
               </div>
             )}
-          </>
-        ) : (
-          <div className="text-center text-gray-500 py-10">No talent profiles found.</div>
-        )}
-        <div className="mt-10 text-center">
-          <a
-            href="mailto:talent@yourdomain.com?subject=Hire%20Top%20Talent%20Inquiry"
-            className="inline-block bg-pink-700 hover:bg-pink-800 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-200"
-          >
-            Hire Top Talent
-          </a>
+
+            {/* LOADING */}
+            {loading ? (
+              <div className="mt-14 flex items-center justify-center py-20">
+                <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#EB5B00] border-t-transparent" />
+              </div>
+            ) : candidates.length > 0 ? (
+              <>
+                {/* GRID */}
+                <div className="mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  {candidates.map((candidate) => (
+                    <div
+                      key={candidate.id}
+                      className="group relative overflow-hidden rounded-[30px] border border-white/10 bg-[#111118]/90 p-5 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#EB5B00]/30 hover:bg-[#151520]"
+                    >
+                      {/* glow */}
+                      <div className="absolute inset-0">
+                        <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-[#EB5B00]/10 blur-3xl transition-all duration-500 group-hover:scale-125" />
+
+                        <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-[#640D5F]/10 blur-3xl transition-all duration-500 group-hover:scale-125" />
+                      </div>
+
+                      <div className="relative z-10 flex h-full flex-col">
+                        {/* PROFILE */}
+                        <div className="mb-5 flex items-start justify-between">
+                          <div className="relative">
+                            <img
+                              src={
+                                candidate.profilePhoto ||
+                                candidate.user?.image ||
+                                "/industry-icons/engineer.svg"
+                              }
+                              alt={candidate.fullName}
+                              className="h-16 w-16 rounded-2xl border border-white/10 object-cover"
+                            />
+
+                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-[#111118] bg-green-400" />
+                          </div>
+
+                          <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-white/60">
+                            <MapPin className="size-3" />
+                            Remote
+                          </div>
+                        </div>
+
+                        {/* INFO */}
+                        <div>
+                          <h2
+                            className="line-clamp-1 text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#FFCC00]"
+                            title={candidate.fullName}
+                          >
+                            {candidate.fullName}
+                          </h2>
+
+                          <p className="mt-1 line-clamp-1 text-sm font-medium text-[#FFCC00]">
+                            {candidate.headline ||
+                              candidate.user?.role ||
+                              "Professional"}
+                          </p>
+
+                          <p
+                            className="mt-2 line-clamp-1 text-xs text-white/45"
+                            title={candidate.email}
+                          >
+                            {candidate.email}
+                          </p>
+                        </div>
+
+                        {/* SKILLS */}
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          {candidate.skills &&
+                          candidate.skills.length > 0 ? (
+                            candidate.skills
+                              .slice(0, 4)
+                              .map((skill) => (
+                                <div
+                                  key={skill}
+                                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/70"
+                                >
+                                  {skill}
+                                </div>
+                              ))
+                          ) : (
+                            <span className="text-xs italic text-white/30">
+                              No skills listed
+                            </span>
+                          )}
+                        </div>
+
+                        {/* footer */}
+                        <div className="mt-auto pt-7">
+                          <Link
+                            href={`/talent/${candidate.id}`}
+                            className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#640D5F] via-[#B12C00] to-[#EB5B00] px-5 text-sm font-semibold text-white shadow-lg shadow-[#EB5B00]/20 transition-all duration-300 hover:scale-[1.02]"
+                          >
+                            View Profile
+
+                            <ArrowRight className="ml-2 size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <div className="mt-12 flex justify-center">
+                  <Link
+                    href="mailto:talent@yourdomain.com?subject=Hire%20Top%20Talent%20Inquiry"
+                    className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-7 text-sm font-semibold text-white backdrop-blur-xl transition-all duration-300 hover:border-[#EB5B00]/30 hover:bg-white/[0.08]"
+                  >
+                    <BriefcaseBusiness className="mr-2 size-4 text-[#FFCC00]" />
+                    Hire Top Talent
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <div className="py-24 text-center">
+                <h3 className="text-xl font-semibold text-white">
+                  No talent profiles found
+                </h3>
+
+                <p className="mt-2 text-white/50">
+                  New profiles will appear here soon.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* footer */}
+        <div className="mt-10 text-center text-sm text-white/30">
+          Premium talent discovery powered by HireGPT AI.
         </div>
-      </section>
-      <footer className="mt-16 text-gray-400 text-sm text-center">
-        Premium talent discovery. Inspired by Wellfound.
-      </footer>
+      </div>
     </main>
   );
 }

@@ -3,24 +3,63 @@
 import { motion } from "framer-motion";
 
 const floatingWords = [
-  "AI Hiring",
-  "Remote Jobs",
-  "Top Startups",
-  "Next.js",
-  "Developers",
-  "Innovation",
-  "React",
-  "TypeScript",
-  "Product Design",
-  "Engineering",
+  {
+    text: "AI Hiring",
+    className:
+      "top-[8%] left-[8%] md:left-[12%]",
+  },
+  {
+    text: "Remote Jobs",
+    className:
+      "top-[12%] right-[10%] md:right-[14%]",
+  },
+  {
+    text: "Top Startups",
+    className:
+      "top-[34%] left-[2%] md:left-[10%]",
+  },
+  {
+    text: "Next.js",
+    className:
+      "top-[30%] right-[2%] md:right-[10%]",
+  },
+  {
+    text: "Developers",
+    className:
+      "bottom-[18%] left-[14%]",
+  },
+  {
+    text: "Innovation",
+    className:
+      "bottom-[10%] right-[18%]",
+  },
+  {
+    text: "React",
+    className:
+      "top-[52%] left-[32%]",
+  },
+  {
+    text: "TypeScript",
+    className:
+      "top-[18%] left-[40%]",
+  },
+  {
+    text: "Product Design",
+    className:
+      "bottom-[16%] right-[34%]",
+  },
+  {
+    text: "Engineering",
+    className:
+      "bottom-[34%] left-[42%]",
+  },
 ];
 
 export default function VideoHero() {
   return (
-    <section className="relative  bg-[#050505] text-white">
+    <section className="relative bg-[#050505] text-white">
       {/* Hero Container */}
-      <div className="relative h-[44vh] min-h-80 w-full overflow-hidden rounded-b-4xl">
-        
+      <div className="relative h-[44vh] min-h-[340px] w-full overflow-hidden rounded-b-[2.5rem]">
         {/* Background Video */}
         <video
           autoPlay
@@ -29,66 +68,53 @@ export default function VideoHero() {
           playsInline
           className="absolute inset-0 h-full w-full object-cover"
         >
-          {/* C:\PortFolioProjects\HireGpt-Frontend\public\video\OIG2 (1).mp4 */}
-          <source src="\video\OIG2 (1).mp4" type="video/mp4" />
+          <source
+            src="/video/OIG2 (1).mp4"
+            type="video/mp4"
+          />
         </video>
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/65" />
+        {/* Dark Overlay (reduced opacity) */}
+        <div className="absolute inset-0 bg-black/40" />
 
-        {/* Soft Orange Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,180,120,0.18),transparent_40%)]" />
+        {/* Ambient Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,170,90,0.18),transparent_38%)]" />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(100,13,95,0.18),transparent_35%)]" />
+
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:42px_42px]" />
 
         {/* Content */}
-        <div className="relative z-10 flex h-full flex-col items-center px-6 pt-8 text-center">
-          
-          {/* Title Top */}
-          {/* <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="mb-8 max-w-2xl text-2xl font-black leading-tight md:text-xl"
-          >
-            Build Your Future With
-            <span className="bg-gradient-to-r from-orange-100 via-orange-200 to-orange-300 bg-clip-text text-transparent">
-              {" "}
-              Modern Careers
-            </span>
-          </motion.h1> */}
-
-          {/* Subtitle */}
-          <motion.h4
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.10, duration: 0.7 }}
-            className="mt-2 max-w-sm text-base text-green-300 md:text-lg font-bold"
-          >
-            Explore AI-powered hiring, remote opportunities,
-            and the fastest growing startups.
-          </motion.h4>
-
-          {/* Floating Words Area */}
-          <div className="relative mt-5 h-40 w-full max-w-8xl">
+        <div className="relative z-10 flex h-full items-center justify-center px-6">
+          {/* Floating Tags */}
+          <div className="relative h-full w-full max-w-7xl">
             {floatingWords.map((word, index) => (
               <motion.div
-                key={word}
-                initial={{ opacity: 0 }}
+                key={word.text}
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
                 animate={{
                   opacity: 1,
-                  y: [0, -12, 0],
+                  y: [0, -10, 0],
                 }}
                 transition={{
-                  duration: 4 + index * 0.2,
+                  duration: 5 + index * 0.2,
                   repeat: Infinity,
                   ease: "easeInOut",
+                  delay: index * 0.08,
                 }}
-                className="absolute rounded-2xl border border-white/15 bg-black/40 px-5 py-3 text-sm font-medium text-white shadow-[0_0_25px_rgba(255,255,255,0.05)] backdrop-blur-xl md:text-base"
-                style={{
-                  top: `${(index % 5) * 22}%`,
-                  left: `${4 + (index % 6) * 22}%`,
-                }}
+                className={`absolute hidden rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-[11px] font-medium tracking-wide text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:flex ${word.className}`}
               >
-                {word}
+                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-white/[0.05] via-transparent to-[#EB5B00]/[0.08]" />
+
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#FFB547] shadow-[0_0_10px_rgba(255,181,71,0.9)]" />
+
+                  {word.text}
+                </span>
               </motion.div>
             ))}
           </div>
